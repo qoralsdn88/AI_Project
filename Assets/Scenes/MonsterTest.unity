@@ -298,6 +298,12 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 1637584495559616, guid: 3ca3931e5b82c6b438f4aaa6afadfc28, type: 3}
       insertIndex: -1
+      addedObject: {fileID: 763476453}
+    - targetCorrespondingSourceObject: {fileID: 1637584495559616, guid: 3ca3931e5b82c6b438f4aaa6afadfc28, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 763476450}
+    - targetCorrespondingSourceObject: {fileID: 1637584495559616, guid: 3ca3931e5b82c6b438f4aaa6afadfc28, type: 3}
+      insertIndex: -1
       addedObject: {fileID: 763476449}
   m_SourcePrefab: {fileID: 100100000, guid: 3ca3931e5b82c6b438f4aaa6afadfc28, type: 3}
 --- !u!1 &763476448 stripped
@@ -327,6 +333,37 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!114 &763476450
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 763476448}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 364e58fffdf80274090c952c11670bb3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  player: {fileID: 0}
+  moveSpeed: 3
+  detectRange: 14
+  attackRange: 1.8
+--- !u!114 &763476453
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 763476448}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89c6adced4347054dae43e843fcc1550, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  detectChase: {fileID: 0}
+  attackDamage: 10
+  attackCooldown: 1.2
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -402,7 +439,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7627181307892519552, guid: 9aed1d7c629946343bca3c8d240aedc2, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -4.2
+      value: -11.47
       objectReference: {fileID: 0}
     - target: {fileID: 7627181307892519552, guid: 9aed1d7c629946343bca3c8d240aedc2, type: 3}
       propertyPath: m_LocalRotation.w
