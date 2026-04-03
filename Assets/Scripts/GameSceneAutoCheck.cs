@@ -71,8 +71,36 @@ public class GameSceneAutoCheck : MonoBehaviour
             return;
         }
 
+        // 다섯 번째 점검으로 CharacterController가 있는지 확인합니다.
+        CharacterController characterController = playerObject.GetComponent<CharacterController>();
+        // CharacterController가 없으면 중력·충돌 이동이 동작하지 않습니다.
+        if (characterController == null)
+        {
+            // 점검 결과 문장을 저장합니다.
+            checkMessage = "실패: CharacterController가 없습니다. Player에 Add Component로 추가해주세요.";
+            // 콘솔에 빨간 경고를 남깁니다.
+            Debug.LogError("[GameSceneAutoCheck] Player 오브젝트에 CharacterController가 없습니다. 중력과 바닥 충돌을 위해 추가해주세요.");
+            // 더 진행할 수 없으므로 함수를 종료합니다.
+            return;
+        }
+
+        // 여섯 번째 점검으로 Capsule Collider와 CharacterController가 같이 있는지 확인합니다.
+        Collider extraCollider = playerObject.GetComponent<CapsuleCollider>();
+        // 둘 다 있으면 겹쳐서 이상하게 끼거나 튈 수 있어 경고만 남기고 계속 진행합니다.
+        if (extraCollider != null && extraCollider.enabled)
+        {
+            // 콘솔에 노란 경고를 남깁니다.
+            Debug.LogWarning("[GameSceneAutoCheck] Player에 CapsuleCollider가 켜져 있습니다. CharacterController만 쓰려면 CapsuleCollider를 끄거나 제거하는 것을 권장합니다.");
+        }
+
         // 모든 점검을 통과했음을 문장으로 저장합니다.
-        checkMessage = "성공: Player 연결, 오브젝트 활성화, 이동 컴포넌트 활성화 모두 정상입니다.";
+        checkMessage = "성공: Player, 이동 스크립트, CharacterController 연결이 정상입니다.";
+        // CapsuleCollider가 켜져 있으면 성공 문장 뒤에 짧은 주의 문구를 덧붙입니다.
+        if (extraCollider != null && extraCollider.enabled)
+        {
+            // 화면에서 바로 보이도록 한 줄로 이어 붙입니다.
+            checkMessage += " (CapsuleCollider도 켜져 있음 — 겹침 주의)";
+        }
         // 콘솔에 성공 로그를 남깁니다.
         Debug.Log("[GameSceneAutoCheck] 점검 완료: 게임 시작에 필요한 연결 상태가 정상입니다.");
     }
