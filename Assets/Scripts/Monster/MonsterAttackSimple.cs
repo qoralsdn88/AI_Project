@@ -20,6 +20,15 @@ public class MonsterAttackSimple : MonoBehaviour // 몬스터의 공격만 담�
 
     private float attackTimer = 0f; // 공격 대기 시간을 계산하는 내부 변수이며 0 이하면 공격 가능 상태입니다.
 
+    [Header("피격/경직 억제")]
+    [Tooltip("공격 모션 구간 동안 플레이어 피격 애니·경직 효과를 넣지 않을 시간(공격 클립 길이에 맞춤).")]
+    [SerializeField] private float attackHitSuppressionDuration = 0.85f;
+
+    private float hitSuppressionEndTime = -999f;
+
+    /// <summary>공격 중에는 플레이어에게 맞은 것처럼 보이는 반응(피격 애니, 추후 경직 등)을 넣지 않습니다. 대미지는 별도 정책.</summary>
+    public bool IsSuppressingHitReaction => Time.time < hitSuppressionEndTime;
+
     void Start() // 게임 시작 시 한 번 실행되는 준비 함수입니다.
     {
         FindDetectChaseIfMissing(); // detectChase가 비어 있으면 같은 오브젝트에서 자동으로 찾아 연결합니다.
@@ -65,6 +74,7 @@ public class MonsterAttackSimple : MonoBehaviour // 몬스터의 공격만 담�
         detectChase.FaceDirection(toPlayer.normalized); // 공격 전에 플레이어를 바라보도록 회전을 맞춥니다.
 
         attackTimer = attackCooldown; // 지금 공격했으니 다음 공격까지 기다리는 시간을 다시 채웁니다.
+        hitSuppressionEndTime = Time.time + Mathf.Max(0f, attackHitSuppressionDuration);
         PlayAttackAnimation(); // 공격 타이밍에 공격 애니메이션을 재생합니다.
 
         SimplePlayerHealth hp = detectChase.player.GetComponent<SimplePlayerHealth>(); // 플레이어 체력 스크립트를 가져옵니다.

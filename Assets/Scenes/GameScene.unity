@@ -285,6 +285,67 @@ MonoBehaviour:
   m_LightCookieSize: {x: 1, y: 1}
   m_LightCookieOffset: {x: 0, y: 0}
   m_SoftShadowQuality: 0
+--- !u!1001 &1393225520
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 751023214943309958, guid: 7da60b9e768aa4045aa79f590ce4147d, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.2150042
+      objectReference: {fileID: 0}
+    - target: {fileID: 751023214943309958, guid: 7da60b9e768aa4045aa79f590ce4147d, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 751023214943309958, guid: 7da60b9e768aa4045aa79f590ce4147d, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 12.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 751023214943309958, guid: 7da60b9e768aa4045aa79f590ce4147d, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 751023214943309958, guid: 7da60b9e768aa4045aa79f590ce4147d, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 751023214943309958, guid: 7da60b9e768aa4045aa79f590ce4147d, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 751023214943309958, guid: 7da60b9e768aa4045aa79f590ce4147d, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 751023214943309958, guid: 7da60b9e768aa4045aa79f590ce4147d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 751023214943309958, guid: 7da60b9e768aa4045aa79f590ce4147d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 180
+      objectReference: {fileID: 0}
+    - target: {fileID: 751023214943309958, guid: 7da60b9e768aa4045aa79f590ce4147d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1048768281967659205, guid: 7da60b9e768aa4045aa79f590ce4147d, type: 3}
+      propertyPath: attackCooldown
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7850421165334880816, guid: 7da60b9e768aa4045aa79f590ce4147d, type: 3}
+      propertyPath: m_Name
+      value: OrkAssasin
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 7da60b9e768aa4045aa79f590ce4147d, type: 3}
 --- !u!1001 &2036838412
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -445,51 +506,8 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 2428664955194134132, guid: fb6d722a617bd9c41b130c55c08b1f0c, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 2763483227242322380}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: fb6d722a617bd9c41b130c55c08b1f0c, type: 3}
---- !u!1 &2763483227242322373 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2428664955194134132, guid: fb6d722a617bd9c41b130c55c08b1f0c, type: 3}
-  m_PrefabInstance: {fileID: 2763483227242322372}
-  m_PrefabAsset: {fileID: 0}
---- !u!95 &2763483227242322375 stripped
-Animator:
-  m_CorrespondingSourceObject: {fileID: 2635658233822875583, guid: fb6d722a617bd9c41b130c55c08b1f0c, type: 3}
-  m_PrefabInstance: {fileID: 2763483227242322372}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &2763483227242322380
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2763483227242322373}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2abece760250b874b9f9abb09a71cdc6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  inputActionAsset: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
-  animator: {fileID: 2763483227242322375}
-  comboIndexParameter: ComboIndex
-  attackTriggerParameter: Attack
-  comboChainResetTime: 0.9
-  attackDamage: 12
-  damageWindowStartTimes:
-  - 0.18
-  - 0.2
-  - 0.22
-  damageWindowLengths:
-  - 0.12
-  - 0.14
-  - 0.16
-  attackTotalDurations:
-  - 0.55
-  - 0.6
-  - 0.75
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -498,3 +516,4 @@ SceneRoots:
   - {fileID: 783948762}
   - {fileID: 2763483227242322372}
   - {fileID: 2036838412}
+  - {fileID: 1393225520}

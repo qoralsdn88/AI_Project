@@ -14,14 +14,38 @@ public class MeleeWeaponHitbox : MonoBehaviour
     // 핵심 요약: combat이 열어준 순간에만 데미지가 나갑니다.
     [SerializeField] private PlayerMeleeCombat combat;
 
+    [Tooltip("트리거 메시지가 환경에 따라 누락될 때 FixedUpdate에서 겹침을 직접 검사합니다.")]
+    [SerializeField] private bool usePhysicsOverlapFallback = true;
+
+    [Tooltip("OverlapBox 검사 시 사용하는 버퍼 크기입니다.")]
+    [SerializeField] private int overlapBufferSize = 24;
+
+    private Collider _selfCollider;
+    private Collider[] _overlapBuffer;
+
     // 컴포넌트가 붙은 순간 자동으로 실행되는 함수입니다.
     // 핵심 요약: 콜라이더가 트리거인지 한 번 더 확인합니다.
     private void Awake()
     {
-        // 같은 오브젝트의 콜라이더를 가져옵니다.
-        Collider col = GetComponent<Collider>();
-        // 트리거가 아니면 경고를 남깁니다.
-        if (col != null && !col.isTrigger) { Debug.LogWarning("[MeleeWeaponHitbox] Collider를 Trigger로 켜주세요."); }
+        _selfCollider = GetComponent<Collider>();
+        if (_selfCollider != null && !_selfCollider.isTrigger) { Debug.LogWarning("[MeleeWeaponHitbox] Collider를 Trigger로 켜주세요."); }
+        int cap = Mathf.Clamp(overlapBufferSize, 4, 64);
+        _overlapBuffer = new Collider[cap];
+    }
+
+    private void Start()
+    {
+        // Initialize()는 장착 스크립트가 AddComponent 직후에 호출하므로 Start 시점에 참조가 맞는지 확인합니다.
+        if (combat == null)
+        {
+            Debug.LogError($"[MeleeWeaponHitbox] {name}: PlayerMeleeCombat 연결이 없습니다. 검을 붙이는 스크립트의 Initialize(playerRoot, meleeCombat)를 확인하세요.");
+        }
+        if (GetComponent<Rigidbody>() == null)
+        {
+            Debug.LogWarning(
+                $"[MeleeWeaponHitbox] {name}: Rigidbody가 없습니다. 애니메이션으로만 움직이는 트리거는 물리 이벤트가 안 들어올 수 있습니다. " +
+                "PlayerEquipmentHolder가 SwordDamageTrigger에 키네마틱 Rigidbody를 붙이는지 확인하거나, 이 오브젝트에 Rigidbody(Is Kinematic)를 추가하세요.");
+        }
     }
 
     // 외부에서 플레이어 래트와 전투 스크립트를 연결할 때 씁니다.
@@ -36,7 +60,33 @@ public class MeleeWeaponHitbox : MonoBehaviour
 
     // 다른 콜라이더가 이 트리거 안으로 들어왔을 때 호출됩니다.
     // 핵심 요약: 무시 대상이면 빠져나가고, 아니면 IDamageable을 찾아 맞춥니다.
-    private void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(Collider other) => TryHitCollider(other);
+
+    // 이미 겹쳐 있던 뒤에 데미지 창만 열리는 경우 OnTriggerEnter가 다시 안 들어올 수 있어 보조로 둡니다.
+    private void OnTriggerStay(Collider other) => TryHitCollider(other);
+
+    private void FixedUpdate()
+    {
+        if (!usePhysicsOverlapFallback || combat == null || _selfCollider == null || !_selfCollider.enabled) { return; }
+        if (!combat.IsDamageWindowActive) { return; }
+
+        int count = Physics.OverlapBoxNonAlloc(
+            _selfCollider.bounds.center,
+            _selfCollider.bounds.extents,
+            _overlapBuffer,
+            _selfCollider.transform.rotation,
+            Physics.AllLayers,
+            QueryTriggerInteraction.Collide);
+
+        for (int i = 0; i < count; i++)
+        {
+            Collider c = _overlapBuffer[i];
+            if (c == null || c == _selfCollider) { continue; }
+            TryHitCollider(c);
+        }
+    }
+
+    private void TryHitCollider(Collider other)
     {
         // 전투 스크립트가 없으면 아무 것도 하지 않습니다.
         if (combat == null) return;

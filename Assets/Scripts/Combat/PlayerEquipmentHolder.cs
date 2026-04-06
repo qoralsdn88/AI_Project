@@ -55,12 +55,22 @@ public class PlayerEquipmentHolder : MonoBehaviour
     // 핵심 요약: 자동으로 비어 있는 참조를 채웁니다.
     private void Awake()
     {
-        // 플레이어 루트가 비어 있으면 자기 자신을 씁니다.
-        if (playerRoot == null) { playerRoot = transform; }
+        // 전투 스크립트: 같은 오브젝트 → 부모 쪽 순으로 찾습니다(프리팹 구조가 달라져도 연결되게).
+        if (meleeCombat == null) { meleeCombat = GetComponent<PlayerMeleeCombat>(); }
+        if (meleeCombat == null) { meleeCombat = GetComponentInParent<PlayerMeleeCombat>(); }
+
+        // 플레이어 루트: 태그가 붙은 조상 → 전투 스크립트가 있는 오브젝트 → 이 스크립트의 루트 순입니다.
+        if (playerRoot == null || !playerRoot.CompareTag("Player"))
+        {
+            Transform t = transform;
+            while (t != null && !t.CompareTag("Player")) { t = t.parent; }
+            if (t != null) { playerRoot = t; }
+            else if (meleeCombat != null) { playerRoot = meleeCombat.transform; }
+            else if (playerRoot == null) { playerRoot = transform.root; }
+        }
+
         // 애니메이터가 비어 있으면 자식에서 찾습니다.
         if (targetAnimator == null) { targetAnimator = GetComponentInChildren<Animator>(); }
-        // 전투 스크립트가 비어 있으면 같이 붙어 있는지 찾습니다.
-        if (meleeCombat == null) { meleeCombat = GetComponent<PlayerMeleeCombat>(); }
     }
 
     // 시작 시점에 장비를 실제로 붙입니다.
@@ -91,6 +101,25 @@ public class PlayerEquipmentHolder : MonoBehaviour
         AttachShield(leftHand);
         // 칼을 붙입니다.
         AttachSword(rightHand);
+
+        ValidateMeleeSetup();
+    }
+
+    // 한 번만 점검해 두면 “맞는데 로그가 없음” 원인을 빨리 좁힐 수 있습니다.
+    private void ValidateMeleeSetup()
+    {
+        if (meleeCombat == null)
+        {
+            Debug.LogError("[PlayerEquipmentHolder] PlayerMeleeCombat이 없습니다. 플레이어 루트에 붙여야 검칼이 데미지 창과 연결됩니다.");
+        }
+        if (longSwordPrefab == null)
+        {
+            Debug.LogWarning("[PlayerEquipmentHolder] Long Sword Prefab이 비어 있습니다. 검·SwordDamageTrigger가 생성되지 않습니다.");
+        }
+        if (playerRoot != null && !playerRoot.CompareTag("Player"))
+        {
+            Debug.LogWarning("[PlayerEquipmentHolder] Player Root에 Player 태그가 없습니다. 피격 로그의 ‘플레이어 공격 적중’은 공격자가 Player 태그일 때만 나옵니다.");
+        }
     }
 
     // 방패 한 개를 붙이는 함수입니다.
@@ -153,9 +182,18 @@ public class PlayerEquipmentHolder : MonoBehaviour
         // 중심을 넣습니다.
         box.center = swordTriggerCenter;
 
+        // ★ 트리거가 본 애니메이션으로만 움직일 때 Rigidbody가 없으면 Unity가 OnTrigger 이벤트를 거의 보내지 않습니다.
+        //    (콘솔에 피격 로그가 전혀 안 뜨는 가장 흔한 원인) 키네마틱이라 중력·물리 밀기는 없고, 트리거 검출만 켜 줍니다.
+        Rigidbody hitRb = hitObj.AddComponent<Rigidbody>();
+        hitRb.isKinematic = true;
+        hitRb.useGravity = false;
+        hitRb.interpolation = RigidbodyInterpolation.None;
+        hitRb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+
         // 맞춤 스크립트를 붙입니다.
         MeleeWeaponHitbox hitbox = hitObj.AddComponent<MeleeWeaponHitbox>();
-        // 플레이어와 전투 스크립트를 연결합니다.
-        hitbox.Initialize(playerRoot, meleeCombat);
+        // 플레이어와 전투 스크립트를 연결합니다(전투가 같은 루트에 있으면 그쪽을 우선).
+        Transform rootForHits = meleeCombat != null ? meleeCombat.transform : playerRoot;
+        hitbox.Initialize(rootForHits, meleeCombat);
     }
 }

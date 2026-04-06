@@ -7189,6 +7189,8 @@ GameObject:
   - component: {fileID: 1048768281967659205}
   - component: {fileID: 793490345260667477}
   - component: {fileID: 3482378931651142879}
+  - component: {fileID: 5634118273640192233}
+  - component: {fileID: 5634118273640192234}
   m_Layer: 0
   m_Name: OrkAssasin
   m_TagString: Untagged
@@ -7248,16 +7250,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 89c6adced4347054dae43e843fcc1550, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  detectChase: {fileID: 0}
-  animator: {fileID: 0}
+  detectChase: {fileID: 793490345260667477}
+  animator: {fileID: 8515176627030191889}
   attackDamage: 10
-  attackCooldown: 1.2
+  attackCooldown: 1.5
   attackTriggerParam: Attack
   useAttackVariants: 1
   attackVariantTriggerParams:
   - Attack1
   - Attack2
   pickRandomVariant: 1
+  attackHitSuppressionDuration: 0.85
 --- !u!114 &793490345260667477
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7271,7 +7274,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   player: {fileID: 0}
-  animator: {fileID: 0}
+  animator: {fileID: 8515176627030191889}
   moveSpeed: 2.5
   detectRange: 20
   attackRange: 1.8
@@ -7299,6 +7302,45 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!136 &5634118273640192233
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7850421165334880816}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.45
+  m_Height: 2
+  m_Direction: 1
+  m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &5634118273640192234
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7850421165334880816}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 887459b29eb0c824895804313e63c3be, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 30
+  animator: {fileID: 8515176627030191889}
+  getHitTriggerParameter: GetHit
+  attackBehaviour: {fileID: 1048768281967659205}
 --- !u!1 &8157332805954135775
 GameObject:
   m_ObjectHideFlags: 0
