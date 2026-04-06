@@ -3749,6 +3749,8 @@ GameObject:
   - component: {fileID: 7755095653563497345}
   - component: {fileID: 6827299489399866753}
   - component: {fileID: 2231808592539092410}
+  - component: {fileID: 2635658233822875583}
+  - component: {fileID: 182253661743737808}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -3831,6 +3833,42 @@ MonoBehaviour:
   mouseSensitivityY: 3
   minPitch: -40
   maxPitch: 70
+--- !u!95 &2635658233822875583
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2428664955194134132}
+  m_Enabled: 1
+  m_Avatar: {fileID: 9000000, guid: ea3c190656c1be74bba0bd65a3905278, type: 3}
+  m_Controller: {fileID: 9100000, guid: 16b605fc8c52c4942bfa64701c2c3829, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &182253661743737808
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2428664955194134132}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb7df27e07872d14593b97c9a126f5b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveStateParameter: MoveState
+  minSpeedToWalk: 0.05
 --- !u!1 &2650458346019732482
 GameObject:
   m_ObjectHideFlags: 0
