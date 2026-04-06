@@ -3751,6 +3751,7 @@ GameObject:
   - component: {fileID: 2231808592539092410}
   - component: {fileID: 2635658233822875583}
   - component: {fileID: 182253661743737808}
+  - component: {fileID: 6726155952074937441}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -3842,7 +3843,7 @@ Animator:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2428664955194134132}
   m_Enabled: 1
-  m_Avatar: {fileID: 9000000, guid: ea3c190656c1be74bba0bd65a3905278, type: 3}
+  m_Avatar: {fileID: 9000000, guid: b549692f7f04c6c409ff3e2bf2f5e3a7, type: 3}
   m_Controller: {fileID: 9100000, guid: 16b605fc8c52c4942bfa64701c2c3829, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
@@ -3869,6 +3870,32 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveStateParameter: MoveState
   minSpeedToWalk: 0.05
+  meleeCombat: {fileID: 0}
+--- !u!114 &6726155952074937441
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2428664955194134132}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6791cbd0765b3a3408a915adce9138bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  shieldPrefab: {fileID: 1655624208560429100, guid: 6bc6a20dd54249f43ab2e64224dee23d, type: 3}
+  longSwordPrefab: {fileID: 686172934072193088, guid: a989453eccc6d174fbf07eaa65c80084, type: 3}
+  targetAnimator: {fileID: 0}
+  playerRoot: {fileID: 6094188035734756757}
+  meleeCombat: {fileID: 0}
+  shieldLocalPosition: {x: 0, y: 0, z: 0}
+  shieldLocalEuler: {x: 0, y: 0, z: 0}
+  shieldLocalScale: {x: 1, y: 1, z: 1}
+  swordLocalPosition: {x: 0, y: 0, z: 0}
+  swordLocalEuler: {x: 0, y: 0, z: 0}
+  swordLocalScale: {x: 1, y: 1, z: 1}
+  swordTriggerSize: {x: 0.12, y: 0.85, z: 0.06}
+  swordTriggerCenter: {x: 0, y: 0.35, z: 0.02}
 --- !u!1 &2650458346019732482
 GameObject:
   m_ObjectHideFlags: 0

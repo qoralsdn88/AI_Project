@@ -23,6 +23,10 @@ public class PlayerDirectionalAnimationController : MonoBehaviour
     // 핵심 요약: velocity를 읽어 실제 이동 방향을 계산하기 위해 필요합니다.
     private CharacterController characterController;
 
+    // 공격 중일 때는 걷기 상태를 덮어쓰지 않기 위해 참조합니다.
+    // 핵심 요약: 비어 있으면 자동으로 같은 오브젝트에서 찾습니다.
+    [SerializeField] private PlayerMeleeCombat meleeCombat;
+
     // 오브젝트가 준비되자마자 실행되는 함수입니다.
     // 핵심 요약: Awake에서 컴포넌트를 찾아서 Update에서 안전하게 쓰게 합니다.
     private void Awake()
@@ -31,6 +35,8 @@ public class PlayerDirectionalAnimationController : MonoBehaviour
         animator = GetComponent<Animator>(); // Animator가 없으면 여기서 null일 수 있습니다.
         // CharacterController 컴포넌트를 가져옵니다.
         characterController = GetComponent<CharacterController>(); // PlayerSimpleMover에서 쓰는 것과 같은 컨트롤러를 기대합니다.
+        // 전투 스크립트가 비어 있으면 같은 오브젝트에서 찾습니다.
+        if (meleeCombat == null) { TryGetComponent(out meleeCombat); }
 
         // Animator가 없으면 에러를 남깁니다.
         if (animator == null) { Debug.LogError("[PlayerDirectionalAnimationController] Animator가 없습니다. Player에 Animator 컴포넌트를 추가해주세요."); } // 찾기 실패 시 바로 원인을 알려줍니다.
@@ -44,6 +50,14 @@ public class PlayerDirectionalAnimationController : MonoBehaviour
     {
         // Animator나 CharacterController가 없으면 더 할 수 없으니 중단합니다.
         if (animator == null || characterController == null) { return; } // 방어 코드입니다.
+
+        // 공격 중에는 걷기 상태를 고정하지 않으면 Combo 중 Idle을 잠깐 지날 때
+        // 예전 MoveState(예: 전진)로 바로 튕겨 콤보 트리거와 경쟁할 수 있습니다.
+        if (meleeCombat != null && meleeCombat.IsAttacking)
+        {
+            animator.SetInteger(moveStateParameter, 0);
+            return;
+        }
 
         // CharacterController가 가진 현재 속도를 가져옵니다.
         Vector3 worldVelocity = characterController.velocity; // 월드 방향 속도입니다.
