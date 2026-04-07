@@ -1315,7 +1315,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 100000, guid: 4aa5a7ef56dd26f4d8cdad18e6dd51d2, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 4294967294
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 4aa5a7ef56dd26f4d8cdad18e6dd51d2, type: 3}
       propertyPath: m_RootOrder
@@ -1357,6 +1357,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.y
       value: 90
       objectReference: {fileID: 0}
+    - target: {fileID: 2300000, guid: 4aa5a7ef56dd26f4d8cdad18e6dd51d2, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6473236, guid: 4aa5a7ef56dd26f4d8cdad18e6dd51d2, type: 3}
       propertyPath: m_Enabled
       value: 1
@@ -1364,7 +1368,13 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 100000, guid: 4aa5a7ef56dd26f4d8cdad18e6dd51d2, type: 3}
+      insertIndex: 1
+      addedObject: {fileID: 1546563850}
+    - targetCorrespondingSourceObject: {fileID: 100000, guid: 4aa5a7ef56dd26f4d8cdad18e6dd51d2, type: 3}
+      insertIndex: 2
+      addedObject: {fileID: 1546563851}
   m_SourcePrefab: {fileID: 100100000, guid: 4aa5a7ef56dd26f4d8cdad18e6dd51d2, type: 3}
 --- !u!1 &718960961 stripped
 GameObject:
@@ -3271,6 +3281,61 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c8fcb67cb3d648b4b87d500ece16b15f, type: 3}
+--- !u!1 &1546563846 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 100000, guid: 4aa5a7ef56dd26f4d8cdad18e6dd51d2, type: 3}
+  m_PrefabInstance: {fileID: 694870487}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &1546563850
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1546563846}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 09514a4c871aaf24b9de13d64f0b4f3f, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1546563851
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1546563846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08ac5862c9283ba4c916a612e7df486a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useMonsterSpawn: 0
+  roomMonsterSpawner: {fileID: 0}
+  doorAnimator: {fileID: 0}
+  openTriggerParam: Open
+  waitSpawnUntilAnimationEvent: 0
+  allowRoomAutoCloseAndLock: 1
+  closeTriggerParam: Close
+  requireCloseTriggerInAnimator: 0
+  openByFKey: 1
+  interactKey: 102
+  useTriggerRange: 1
+  useDistanceRangeFallback: 1
+  interactDistance: 3
+  openByMouseClick: 0
+  canClickOnlyOnce: 1
+  disableThisDoorAfterSignal: 0
 --- !u!1001 &1553390299
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3842,7 +3907,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1704981996}
   m_Layer: 0
-  m_Name: Room1
+  m_Name: Room01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4841,10 +4906,11 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1981767019}
+  - component: {fileID: 1981767024}
+  - component: {fileID: 1981767023}
   - component: {fileID: 1981767022}
   - component: {fileID: 1981767021}
   - component: {fileID: 1981767020}
-  - component: {fileID: 1981767023}
   m_Layer: 0
   m_Name: Door_B (2)
   m_TagString: Untagged
@@ -4860,13 +4926,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1981767018}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 7.5118027, y: 0.0072857477, z: -26.668346}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 854799829}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!64 &1981767020
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -4956,10 +5022,44 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08ac5862c9283ba4c916a612e7df486a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  useMonsterSpawn: 1
   roomMonsterSpawner: {fileID: 1988611491}
-  disableThisDoorAfterSignal: 0
-  openByMouseClick: 1
+  doorAnimator: {fileID: 0}
+  openTriggerParam: Open
+  waitSpawnUntilAnimationEvent: 0
+  allowRoomAutoCloseAndLock: 0
+  closeTriggerParam: Close
+  requireCloseTriggerInAnimator: 1
+  openByFKey: 1
+  interactKey: 102
+  useTriggerRange: 1
+  useDistanceRangeFallback: 1
+  interactDistance: 3
+  openByMouseClick: 0
   canClickOnlyOnce: 1
+  disableThisDoorAfterSignal: 0
+--- !u!95 &1981767024
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1981767018}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 09514a4c871aaf24b9de13d64f0b4f3f, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1988611490
 GameObject:
   m_ObjectHideFlags: 0
@@ -5245,6 +5345,76 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2054816737
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2054816740}
+  - component: {fileID: 2054816739}
+  - component: {fileID: 2054816738}
+  m_Layer: 0
+  m_Name: Room01_TrapZone
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2054816738
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2054816737}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b04eabb2812f982459f1111686cade11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  doorsToCloseAndLock:
+  - {fileID: 1546563851}
+  lockDelaySeconds: 0
+  lockOnlyOnce: 1
+--- !u!65 &2054816739
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2054816737}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!4 &2054816740
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2054816737}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 5.9, y: 2.83, z: 3.26}
+  m_LocalScale: {x: 17, y: 5.5, z: 21}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &2057287580 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 410932, guid: 731670d05affd0045a25600d2045889f, type: 3}
@@ -5512,3 +5682,4 @@ SceneRoots:
   - {fileID: 1937509880}
   - {fileID: 186250791}
   - {fileID: 2047334129}
+  - {fileID: 2054816740}
