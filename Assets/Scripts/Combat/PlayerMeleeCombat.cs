@@ -54,6 +54,9 @@ public class PlayerMeleeCombat : MonoBehaviour
     // 지금 타격 판정이 열려 있는지 표시합니다.
     // 핵심 요약: MeleeWeaponHitbox가 이 값을 보고 데미지를 줍니다.
     private bool _damageWindowActive;
+    // 현재 타의 "실제 타격 구간"이 끝났는지 표시합니다.
+    // 핵심 요약: true가 되면 모션이 남아 있어도 다음 콤보로 자연스럽게 넘어갈 수 있습니다.
+    private bool _attackHitPhaseEnded;
 
     [Header("타격 타이밍 (애니메이션 이벤트)")]
     [Tooltip("켜두면 클립의 Begin_Collision / End_Collision 이벤트가 피격 창을 열고 닫습니다. Animator와 같은 오브젝트(또는 자식)에 이 스크립트가 있어야 이벤트가 호출됩니다.")]
@@ -166,6 +169,7 @@ public class PlayerMeleeCombat : MonoBehaviour
     {
         if (!useAnimationEventsForDamageWindow) return;
         _damageWindowActive = false;
+        _attackHitPhaseEnded = true;
         NotifyWeaponHitboxesStrikeClosed();
     }
 
@@ -297,6 +301,7 @@ public class PlayerMeleeCombat : MonoBehaviour
 
                 _hitInstanceIds.Clear();
                 _damageWindowActive = false;
+                _attackHitPhaseEnded = false;
 
                 if (animator != null)
                 {
@@ -315,9 +320,20 @@ public class PlayerMeleeCombat : MonoBehaviour
                     _damageWindowActive = true;
                     yield return new WaitForSeconds(lenT);
                     _damageWindowActive = false;
+                    _attackHitPhaseEnded = true;
                 }
 
-                yield return WaitUntilComboAnimatorStateExited();
+                if (_comboStep < 3)
+                {
+                    // 1~2타는 "모션 끝"까지 강제 대기하지 않고,
+                    // 공격 판정이 끝난 뒤 버퍼 입력이 있으면 바로 다음 콤보로 넘어갑니다.
+                    yield return WaitUntilComboAdvanceWindowOpen();
+                }
+                else
+                {
+                    // 마지막 타는 자연스럽게 끝까지 재생합니다.
+                    yield return WaitUntilComboAnimatorStateExited();
+                }
 
                 if (_comboStep >= 3)
                 {
@@ -397,6 +413,53 @@ public class PlayerMeleeCombat : MonoBehaviour
         t = 0f;
         while (t < lingerCap && IsAnimatorInState(layer, stateName))
         {
+            t += Time.deltaTime;
+            yield return null;
+        }
+    }
+
+    // 현재 콤보 상태에 들어간 뒤,
+    // 1) 상태가 끝나거나
+    // 2) 타격 구간이 끝났고 버퍼 입력이 있으면
+    // 둘 중 먼저 만족하는 시점까지 기다립니다.
+    private IEnumerator WaitUntilComboAdvanceWindowOpen()
+    {
+        if (animator == null)
+        {
+            float d = SafePick(attackTotalDurations, _comboStep - 1, 0.6f);
+            yield return new WaitForSeconds(d);
+            yield break;
+        }
+
+        int layer = attackAnimatorLayer;
+        string stateName = GetComboStateName(_comboStep);
+        float fallbackDur = SafePick(attackTotalDurations, _comboStep - 1, 0.6f);
+
+        float enterTimeout = 0.5f;
+        float t = 0f;
+        while (t < enterTimeout && !IsAnimatorInState(layer, stateName))
+        {
+            t += Time.deltaTime;
+            yield return null;
+        }
+
+        if (!IsAnimatorInState(layer, stateName))
+        {
+            yield return new WaitForSeconds(fallbackDur);
+            yield break;
+        }
+
+        float lingerCap = fallbackDur + 2.5f;
+        t = 0f;
+        while (t < lingerCap && IsAnimatorInState(layer, stateName))
+        {
+            // 공격 판정이 끝났고 다음 타 입력이 버퍼되어 있으면
+            // 현재 모션이 끝나기 전이라도 다음 콤보로 넘어갑니다.
+            if (_attackHitPhaseEnded && _queuedChainSteps > 0)
+            {
+                yield break;
+            }
+
             t += Time.deltaTime;
             yield return null;
         }
