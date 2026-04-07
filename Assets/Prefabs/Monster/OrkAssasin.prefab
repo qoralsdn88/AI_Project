@@ -7273,7 +7273,7 @@ MonoBehaviour:
   player: {fileID: 0}
   animator: {fileID: 0}
   moveSpeed: 2.5
-  detectRange: 20
+  detectRange: 10
   attackRange: 1.8
   moveSpeedParam: MoveSpeed
   isMovingParam: IsMoving

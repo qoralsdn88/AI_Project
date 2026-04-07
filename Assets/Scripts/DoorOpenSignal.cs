@@ -9,6 +9,11 @@ public class DoorOpenSignal : MonoBehaviour // 문 열기 입력과 스폰 신�
     [SerializeField] private Animator doorAnimator; // 문 오브젝트의 애니메이터를 연결하는 변수입니다.
     [SerializeField] private string openTriggerParam = "Open"; // 문 열기 트리거 이름을 저장하는 변수입니다.
     [SerializeField] private bool waitSpawnUntilAnimationEvent = true; // true면 애니메이션 이벤트에서 DoorOpened를 따로 호출할 때 스폰합니다.
+    [Header("방 자동 잠금(닫기)")] // 인스펙터에서 방에 들어왔을 때 닫기 관련 값을 묶습니다.
+    [SerializeField] private bool allowRoomAutoCloseAndLock = true; // false면 RoomAutoLockDoors가 이 문을 닫지 못하게 막습니다.
+    [SerializeField] private string closeTriggerParam = "Close"; // 문 닫기 애니메이션에 쓸 트리거 이름을 저장합니다.
+    [SerializeField] private bool requireCloseTriggerInAnimator = false; // true면 Close 트리거가 없을 때 경고를 남깁니다.
+    private bool isDoorLocked = false; // true면 F키·클릭으로 다시 열 수 없습니다.
     [Header("F키 열기 설정")] // 인스펙터에서 F키 입력 관련 옵션을 묶습니다.
     [SerializeField] private bool openByFKey = true; // true면 플레이어가 범위 안에서 F를 눌렀을 때 문을 엽니다.
     [SerializeField] private KeyCode interactKey = KeyCode.F; // 상호작용 키를 F로 저장합니다.
@@ -32,6 +37,7 @@ public class DoorOpenSignal : MonoBehaviour // 문 열기 입력과 스폰 신�
     } // Start 블록의 끝 중괄호입니다.
     private void Update() // 매 프레임마다 F키 입력을 확인하는 함수입니다.
     { // 입력 감지 블록입니다.
+        if (isDoorLocked) return; // 문이 잠긴 상태면 더 이상 열기 입력을 받지 않습니다.
         if (!openByFKey) return; // F키 열기 기능을 끈 상태면 아무 작업도 하지 않습니다.
         if (hasOpenRequested) return; // 이미 문 열기를 요청했으면 중복 입력을 막습니다.
         FindPlayerIfMissing(); // 플레이어 연결이 비어 있을 수 있으니 매 프레임 가볍게 다시 찾습니다.
@@ -66,13 +72,35 @@ public class DoorOpenSignal : MonoBehaviour // 문 열기 입력과 스폰 신�
     } // IsPlayerInInteractRange 블록의 끝 중괄호입니다.
     private void OnMouseDown() // 문 오브젝트를 마우스로 눌렀을 때 Unity가 자동 호출하는 함수입니다.
     { // 클릭 입력 처리 블록입니다.
+        if (isDoorLocked) return; // 문이 잠긴 상태면 클릭으로도 열 수 없습니다.
         if (!openByMouseClick) return; // 클릭 열기 기능을 끈 상태면 아무 작업도 하지 않습니다.
         if (canClickOnlyOnce && hasClicked) return; // 클릭 1회 제한이 켜져 있고 이미 눌렀으면 무시합니다.
         hasClicked = true; // 클릭이 처리되었다고 기록합니다.
         OpenDoorNow(); // 클릭도 같은 문 열기 흐름으로 연결합니다.
     } // OnMouseDown 블록의 끝 중괄호입니다.
+    public void CloseAndLockDoor() // RoomAutoLockDoors 같은 방 스크립트에서 호출하는 닫기·잠금 함수입니다.
+    { // 방 진입 시 문을 닫고 열기를 막는 블록입니다.
+        if (!allowRoomAutoCloseAndLock) return; // 이 문이 방 자동 잠금 대상이 아니면 아무것도 하지 않습니다.
+        if (isDoorLocked) return; // 이미 잠긴 문이면 중복 처리를 하지 않습니다.
+        isDoorLocked = true; // 먼저 잠궈서 닫는 동안에도 F키로 열리지 않게 합니다.
+        if (doorAnimator != null && !string.IsNullOrEmpty(closeTriggerParam)) // 애니메이터와 닫기 트리거 이름이 있으면
+        { // 닫기 트리거 실행 시도 블록입니다.
+            if (HasTriggerParameter(closeTriggerParam)) // Animator에 Close 트리거가 실제로 있을 때만
+            { // 트리거가 있을 때만 실행하는 블록입니다.
+                doorAnimator.SetTrigger(closeTriggerParam); // 닫기 애니메이션 트리거를 실행합니다.
+            } // 트리거 있음 블록의 끝 중괄호입니다.
+            else // Close 트리거가 없을 때
+            { // 트리거 없음 처리 블록입니다.
+                if (requireCloseTriggerInAnimator) // 경고를 켜 둔 경우에만
+                { // 개발자에게 Animator 설정 문제를 알리는 블록입니다.
+                    Debug.LogWarning("[DoorOpenSignal] Close 트리거가 Animator에 없습니다. closeTriggerParam 이름을 확인하거나 닫기 클립을 추가해주세요."); // 설정 누락을 알려줍니다.
+                } // 경고 블록의 끝 중괄호입니다.
+            } // 트리거 없음 블록의 끝 중괄호입니다.
+        } // 닫기 트리거 실행 시도 블록의 끝 중괄호입니다.
+    } // CloseAndLockDoor 블록의 끝 중괄호입니다.
     private void OpenDoorNow() // 실제 문 열기 요청을 한 번만 처리하는 함수입니다.
     { // 문 열기 처리 블록입니다.
+        if (isDoorLocked) return; // 잠긴 문은 열 수 없습니다.
         if (hasOpenRequested) return; // 이미 요청된 상태면 중복 실행을 막습니다.
         hasOpenRequested = true; // 지금부터 문 열기 요청이 처리되었다고 기록합니다.
         bool playedAnimation = false; // 애니메이션이 실제로 실행됐는지 저장하는 변수입니다.
