@@ -1,12 +1,11 @@
 // 유니티 기본 기능을 사용하기 위해 꼭 필요합니다.
+using System.Collections;
 using UnityEngine;
 
 // 몬스터 체력을 관리하고 플레이어 공격을 받아들이는 간단한 스크립트입니다.
 // 핵심 요약: IDamageable을 구현해 칼 충돌 스크립트와 연결됩니다.
 public class SimpleMonsterHealth : MonoBehaviour, IDamageable
 {
-    // 최대 체력 값입니다.
-    // 핵심 요약: maxHealth는 시작 체력과 최댓값을 같이 정합니다.
     [SerializeField] private int maxHealth = 30;
 
     [Header("피격 표현")]
@@ -15,31 +14,35 @@ public class SimpleMonsterHealth : MonoBehaviour, IDamageable
     [SerializeField] private string getHitTriggerParameter = "GetHit";
     [SerializeField] private MonsterAttackSimple attackBehaviour;
 
-    // 지금 남은 체력 값입니다.
-    // 핵심 요약: currentHealth가 0이 되면 비활성 처리를 할 수 있습니다.
-    private int currentHealth;
+    [Header("사망")]
+    [Tooltip("Animator의 Dead 트리거 이름(Monster_Base 기본값: Dead).")]
+    [SerializeField] private string deathTriggerParameter = "Dead";
+    [Tooltip("Animator 상태 이름. FBX 클립 이름이 Dead이면 보통 상태 이름도 Dead입니다.")]
+    [SerializeField] private string deathStateName = "Dead";
+    [Tooltip("죽는 애니가 끝난 뒤 씬에서 제거하기까지 대기(초).")]
+    [SerializeField] private float removeAfterDeathAnimationSeconds = 3f;
+    [Tooltip("사망 애니가 끝났는지 판별할 때 사용. 너무 짧으면 마지막 자세 전에 넘어갈 수 있습니다.")]
+    [SerializeField] private float deathAnimFinishedNormalizedTime = 0.98f;
+    [Tooltip("애니가 안 넘어가도 이 시간(초)이 지나면 제거 대기 단계로 진행합니다.")]
+    [SerializeField] private float deathAnimSafetyTimeout = 12f;
 
-    // 준비 단계에서 체력을 채웁니다.
-    // 핵심 요약: Awake에서 시작 체력을 maxHealth로 맞춥니다.
+    private int currentHealth;
+    private bool isDeathStarted;
+
     private void Awake()
     {
-        // 시작할 때 현재 체력을 최대로 맞춥니다.
         currentHealth = maxHealth;
         if (animator == null) { animator = GetComponentInChildren<Animator>(); }
         if (attackBehaviour == null) { TryGetComponent(out attackBehaviour); }
     }
 
-    // 외부에서 데미지를 줄 때 호출하는 함수입니다.
-    // 핵심 요약: attacker는 로그용이며 나중에 통계에도 쓸 수 있습니다.
     public void TakeDamage(int damage, GameObject attacker)
     {
-        // 데미지가 0 이하면 아무 일도 하지 않습니다.
+        if (isDeathStarted) return;
         if (damage <= 0) return;
 
-        // 체력을 줄입니다.
         currentHealth -= damage;
 
-        // 디버그용으로 남은 체력을 콘솔에 남깁니다.
         Debug.Log($"[SimpleMonsterHealth] {name} 체력: {currentHealth} / {maxHealth} (공격자: {(attacker != null ? attacker.name : "없음")})");
 
         if (IsDamageFromPlayer(attacker))
@@ -56,12 +59,92 @@ public class SimpleMonsterHealth : MonoBehaviour, IDamageable
             PlayHitReaction();
         }
 
-        // 체력이 0 이하가 되면 비활성 처리로 간단히 죽은 처리를 합니다.
         if (currentHealth <= 0)
         {
-            // 오브젝트를 꺼서 씬에서 사라진 것처럼 보이게 합니다.
-            gameObject.SetActive(false);
+            StartDeathIfNeeded();
         }
+    }
+
+    private void StartDeathIfNeeded()
+    {
+        if (isDeathStarted) return;
+        isDeathStarted = true;
+
+        DisableCombatAndMovement();
+        DisableDamageColliders();
+
+        StartCoroutine(DeathSequenceRoutine());
+    }
+
+    private void DisableCombatAndMovement()
+    {
+        if (attackBehaviour != null) attackBehaviour.enabled = false;
+
+        if (TryGetComponent(out MonsterDetectChaseSimple chase))
+        {
+            chase.enabled = false;
+        }
+    }
+
+    private void DisableDamageColliders()
+    {
+        foreach (Collider c in GetComponentsInChildren<Collider>(includeInactive: true))
+        {
+            c.enabled = false;
+        }
+    }
+
+    private IEnumerator DeathSequenceRoutine()
+    {
+        PlayDeathAnimation();
+
+        yield return null;
+
+        float start = Time.time;
+        bool finishedByTime = false;
+
+        while (Time.time - start < deathAnimSafetyTimeout)
+        {
+            if (animator == null || string.IsNullOrEmpty(deathStateName))
+            {
+                finishedByTime = true;
+                break;
+            }
+
+            AnimatorStateInfo info = animator.GetCurrentAnimatorStateInfo(0);
+            if (info.IsName(deathStateName) && info.normalizedTime >= deathAnimFinishedNormalizedTime)
+            {
+                finishedByTime = true;
+                break;
+            }
+
+            yield return null;
+        }
+
+        if (!finishedByTime && animator != null)
+        {
+            Debug.LogWarning($"[SimpleMonsterHealth] {name}: 사망 상태({deathStateName})가 {deathAnimSafetyTimeout}초 안에 끝나지 않아 안전 타임아웃으로 넘어갑니다. Animator에 Dead 트리거/상태가 있는지 확인하세요.");
+        }
+
+        if (removeAfterDeathAnimationSeconds > 0f)
+        {
+            yield return new WaitForSeconds(removeAfterDeathAnimationSeconds);
+        }
+
+        Destroy(gameObject);
+    }
+
+    private void PlayDeathAnimation()
+    {
+        if (animator == null || string.IsNullOrEmpty(deathTriggerParameter)) return;
+        if (!HasTriggerParameter(deathTriggerParameter))
+        {
+            Debug.LogWarning($"[SimpleMonsterHealth] {name}: Animator에 Trigger '{deathTriggerParameter}'가 없습니다. Monster_Base.controller에 Dead 트리거를 추가했는지 확인하세요.");
+            return;
+        }
+
+        animator.ResetTrigger(deathTriggerParameter);
+        animator.SetTrigger(deathTriggerParameter);
     }
 
     private static bool IsDamageFromPlayer(GameObject attacker)

@@ -27,6 +27,8 @@ public class PlayerDirectionalAnimationController : MonoBehaviour
     // 핵심 요약: 비어 있으면 자동으로 같은 오브젝트에서 찾습니다.
     [SerializeField] private PlayerMeleeCombat meleeCombat;
 
+    [SerializeField] private SimplePlayerHealth playerHealth;
+
     // 오브젝트가 준비되자마자 실행되는 함수입니다.
     // 핵심 요약: Awake에서 컴포넌트를 찾아서 Update에서 안전하게 쓰게 합니다.
     private void Awake()
@@ -36,7 +38,8 @@ public class PlayerDirectionalAnimationController : MonoBehaviour
         // CharacterController 컴포넌트를 가져옵니다.
         characterController = GetComponent<CharacterController>(); // PlayerSimpleMover에서 쓰는 것과 같은 컨트롤러를 기대합니다.
         // 전투 스크립트가 비어 있으면 같은 오브젝트에서 찾습니다.
-        if (meleeCombat == null) { TryGetComponent(out meleeCombat); }
+        if (meleeCombat == null) { meleeCombat = PlayerMeleeCombat.Resolve(transform); }
+        if (playerHealth == null) { playerHealth = SimplePlayerHealth.Resolve(transform); }
 
         // Animator가 없으면 에러를 남깁니다.
         if (animator == null) { Debug.LogError("[PlayerDirectionalAnimationController] Animator가 없습니다. Player에 Animator 컴포넌트를 추가해주세요."); } // 찾기 실패 시 바로 원인을 알려줍니다.
@@ -51,9 +54,19 @@ public class PlayerDirectionalAnimationController : MonoBehaviour
         // Animator나 CharacterController가 없으면 더 할 수 없으니 중단합니다.
         if (animator == null || characterController == null) { return; } // 방어 코드입니다.
 
+        // 사망 후에는 MoveState를 건드리지 않습니다. Dead 상태 전환 직후 파라미터가 경쟁하는 것을 막습니다.
+        if (playerHealth != null && playerHealth.IsDead) { return; }
+
         // 공격 중에는 걷기 상태를 고정하지 않으면 Combo 중 Idle을 잠깐 지날 때
         // 예전 MoveState(예: 전진)로 바로 튕겨 콤보 트리거와 경쟁할 수 있습니다.
         if (meleeCombat != null && meleeCombat.IsAttacking)
+        {
+            animator.SetInteger(moveStateParameter, 0);
+            return;
+        }
+
+        // 피격·사망 연출 중에는 이동 블렌드 트리가 피격 모션과 싸우지 않게 Idle(0)로 고정합니다.
+        if (playerHealth != null && playerHealth.IsActionLocked)
         {
             animator.SetInteger(moveStateParameter, 0);
             return;

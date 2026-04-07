@@ -119,51 +119,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &783948760
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 783948762}
-  - component: {fileID: 783948761}
-  m_Layer: 0
-  m_Name: GameManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &783948761
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 783948760}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ad2c0b79c59a1f744bdc76e5fdb2b6bf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  winAfterSeconds: 20
---- !u!4 &783948762
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 783948760}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1171360891
 GameObject:
   m_ObjectHideFlags: 0
@@ -333,10 +288,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1048768281967659205, guid: 7da60b9e768aa4045aa79f590ce4147d, type: 3}
-      propertyPath: attackCooldown
-      value: 1.5
-      objectReference: {fileID: 0}
     - target: {fileID: 7850421165334880816, guid: 7da60b9e768aa4045aa79f590ce4147d, type: 3}
       propertyPath: m_Name
       value: OrkAssasin
@@ -455,54 +406,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6726155952074937441, guid: fb6d722a617bd9c41b130c55c08b1f0c, type: 3}
-      propertyPath: swordLocalEuler.x
-      value: 86.302124
-      objectReference: {fileID: 0}
-    - target: {fileID: 6726155952074937441, guid: fb6d722a617bd9c41b130c55c08b1f0c, type: 3}
-      propertyPath: swordLocalEuler.y
-      value: 340.03992
-      objectReference: {fileID: 0}
-    - target: {fileID: 6726155952074937441, guid: fb6d722a617bd9c41b130c55c08b1f0c, type: 3}
-      propertyPath: swordLocalEuler.z
-      value: 325.37466
-      objectReference: {fileID: 0}
-    - target: {fileID: 6726155952074937441, guid: fb6d722a617bd9c41b130c55c08b1f0c, type: 3}
-      propertyPath: shieldLocalEuler.x
-      value: 76.59749
-      objectReference: {fileID: 0}
-    - target: {fileID: 6726155952074937441, guid: fb6d722a617bd9c41b130c55c08b1f0c, type: 3}
-      propertyPath: shieldLocalEuler.y
-      value: 306.2257
-      objectReference: {fileID: 0}
-    - target: {fileID: 6726155952074937441, guid: fb6d722a617bd9c41b130c55c08b1f0c, type: 3}
-      propertyPath: shieldLocalEuler.z
-      value: 126.82748
-      objectReference: {fileID: 0}
-    - target: {fileID: 6726155952074937441, guid: fb6d722a617bd9c41b130c55c08b1f0c, type: 3}
-      propertyPath: swordLocalPosition.x
-      value: 0.1003
-      objectReference: {fileID: 0}
-    - target: {fileID: 6726155952074937441, guid: fb6d722a617bd9c41b130c55c08b1f0c, type: 3}
-      propertyPath: swordLocalPosition.y
-      value: -0.0592
-      objectReference: {fileID: 0}
-    - target: {fileID: 6726155952074937441, guid: fb6d722a617bd9c41b130c55c08b1f0c, type: 3}
-      propertyPath: swordLocalPosition.z
-      value: 0.0582
-      objectReference: {fileID: 0}
-    - target: {fileID: 6726155952074937441, guid: fb6d722a617bd9c41b130c55c08b1f0c, type: 3}
-      propertyPath: shieldLocalPosition.x
-      value: -0.013
-      objectReference: {fileID: 0}
-    - target: {fileID: 6726155952074937441, guid: fb6d722a617bd9c41b130c55c08b1f0c, type: 3}
-      propertyPath: shieldLocalPosition.y
-      value: -0.033
-      objectReference: {fileID: 0}
-    - target: {fileID: 6726155952074937441, guid: fb6d722a617bd9c41b130c55c08b1f0c, type: 3}
-      propertyPath: shieldLocalPosition.z
-      value: 0.413
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -513,7 +416,6 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1171360893}
-  - {fileID: 783948762}
   - {fileID: 2763483227242322372}
   - {fileID: 2036838412}
   - {fileID: 1393225520}

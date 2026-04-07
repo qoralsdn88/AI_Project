@@ -56,6 +56,9 @@ public class PlayerSimpleMover : MonoBehaviour
     // 핵심 요약: 비어 있으면 같은 오브젝트에서 찾습니다.
     [SerializeField] private PlayerMeleeCombat meleeCombat;
 
+    // 피격·사망 경직 중에는 이동을 막습니다.
+    [SerializeField] private SimplePlayerHealth playerHealth;
+
     // 마지막으로 입력이 확인된 시간을 저장하는 변수입니다.
     // 핵심 요약: lastInputTime으로 입력이 멈춘 시간을 계산할 수 있습니다.
     private float lastInputTime = 0f;
@@ -72,7 +75,8 @@ public class PlayerSimpleMover : MonoBehaviour
             // 개발 중 바로 원인을 알 수 있게 빨간 로그를 출력합니다.
             Debug.LogError("[PlayerSimpleMover] CharacterController가 없습니다. Add Component로 추가해주세요.");
         }
-        if (meleeCombat == null) { TryGetComponent(out meleeCombat); }
+        if (meleeCombat == null) { meleeCombat = PlayerMeleeCombat.Resolve(transform); }
+        if (playerHealth == null) { playerHealth = SimplePlayerHealth.Resolve(transform); }
         // 캐릭터 컨트롤러를 찾았음을 콘솔에 알려줍니다.
         Debug.Log("[PlayerSimpleMover] Awake 호출됨 (CharacterController 사용 모드)");
     }
@@ -127,8 +131,9 @@ public class PlayerSimpleMover : MonoBehaviour
         moveDirection = moveDirection.normalized;
         // 수평 이동은 초당 속도에 프레임 시간을 곱해 이번 프레임 이동량으로 만듭니다.
         Vector3 horizontalMotion = moveDirection * moveSpeed * Time.deltaTime;
-        // 공격 중에는 WASD/방향키 이동만 막고 중력·낙하는 그대로 둡니다.
+        // 공격 중·피격 경직·사망 처리 중에는 WASD/방향키 이동만 막고 중력·낙하는 그대로 둡니다.
         if (meleeCombat != null && meleeCombat.IsAttacking) { horizontalMotion = Vector3.zero; }
+        if (playerHealth != null && playerHealth.IsActionLocked) { horizontalMotion = Vector3.zero; }
 
         // 지난 프레임 Move 이후 바닥에 닿았는지 여부를 먼저 읽습니다.
         bool isGrounded = characterController.isGrounded;

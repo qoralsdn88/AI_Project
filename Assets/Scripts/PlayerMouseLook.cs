@@ -33,6 +33,8 @@ public class PlayerMouseLook : MonoBehaviour
     // 핵심 요약: currentPitch는 누적된 위아래 회전을 기억합니다.
     private float currentPitch = 0f;
 
+    [SerializeField] private SimplePlayerHealth playerHealth;
+
     // 게임 시작 시 한 번 실행되는 함수입니다.
     // 핵심 요약: Start에서 카메라 피벗을 점검하고 마우스 커서를 잠급니다.
     private void Start()
@@ -48,12 +50,16 @@ public class PlayerMouseLook : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         // 게임 중에는 마우스 포인터를 숨겨서 몰입감을 높입니다.
         Cursor.visible = false;
+
+        if (playerHealth == null) { playerHealth = SimplePlayerHealth.Resolve(transform); }
     }
 
     // 매 프레임마다 자동으로 실행되는 함수입니다.
     // 핵심 요약: 마우스 움직임을 읽어 캐릭터와 카메라를 회전시킵니다.
     private void Update()
     {
+        if (playerHealth != null && playerHealth.IsActionLocked) { return; }
+
         // 마우스 입력을 읽어서 좌우와 위아래 이동량을 가져옵니다.
         Vector2 mouseDelta = ReadMouseDelta();
 

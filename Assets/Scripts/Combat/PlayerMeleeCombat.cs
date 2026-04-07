@@ -55,16 +55,19 @@ public class PlayerMeleeCombat : MonoBehaviour
     // 핵심 요약: MeleeWeaponHitbox가 이 값을 보고 데미지를 줍니다.
     private bool _damageWindowActive;
 
+    [Header("타격 타이밍 (애니메이션 이벤트)")]
+    [Tooltip("켜두면 클립의 Begin_Collision / End_Collision 이벤트가 피격 창을 열고 닫습니다. Animator와 같은 오브젝트(또는 자식)에 이 스크립트가 있어야 이벤트가 호출됩니다.")]
+    [SerializeField] private bool useAnimationEventsForDamageWindow = true;
+
     // 한 번에 줄 데미지 크기입니다.
     // 핵심 요약: TryHit에서 그대로 전달합니다.
     [SerializeField] private int attackDamage = 12;
 
-    // 각 콤보 단계마다 데미지 창이 열리기까지 기다리는 시간입니다.
-    // 핵심 요약: 애니메이션에 맞춰 인스펙터에서 조절합니다.
+    [Header("타격 타이밍 (타이머 폴백)")]
+    [Tooltip("useAnimationEventsForDamageWindow가 꺼져 있을 때만 사용합니다.")]
     [SerializeField] private float[] damageWindowStartTimes = { 0.18f, 0.2f, 0.22f };
 
-    // 각 콤보 단계마다 데미지 창이 열려 있는 시간입니다.
-    // 핵심 요약: 너무 짧으면 안 맞고, 너무 길면 여러 번 맞습니다.
+    [Tooltip("useAnimationEventsForDamageWindow가 꺼져 있을 때만 사용합니다.")]
     [SerializeField] private float[] damageWindowLengths = { 0.12f, 0.14f, 0.16f };
 
     // 각 콤보가 끝날 때까지 기다리는 최소 시간입니다.
@@ -87,6 +90,9 @@ public class PlayerMeleeCombat : MonoBehaviour
     // 핵심 요약: 1, 2, 3 사이를 순환합니다.
     private int _comboStep;
 
+    // SwordDamageTrigger 등이 스트라이크가 열릴 때 물리를 새로 고칩니다.
+    private readonly List<MeleeWeaponHitbox> _registeredWeaponHitboxes = new List<MeleeWeaponHitbox>(4);
+
     // 외부에서 “지금 공격 중인지”를 읽습니다.
     // 핵심 요약: 걷기 애니메이션을 잠시 멈출 때 씁니다.
     public bool IsAttacking => _isAttacking;
@@ -94,6 +100,102 @@ public class PlayerMeleeCombat : MonoBehaviour
     // 외부에서 “지금 데미지 창인지”를 읽습니다.
     // 핵심 요약: MeleeWeaponHitbox가 매 프레임 판단합니다.
     public bool IsDamageWindowActive => _damageWindowActive;
+
+    private SimplePlayerHealth _playerHealth;
+
+    public static PlayerMeleeCombat Resolve(Transform t)
+    {
+        if (t == null) return null;
+        if (t.TryGetComponent(out PlayerMeleeCombat c)) return c;
+        c = t.GetComponentInParent<PlayerMeleeCombat>(true);
+        if (c != null) return c;
+        return t.GetComponentInChildren<PlayerMeleeCombat>(true);
+    }
+
+    // 피격·사망 시 공격을 즉시 중단합니다. StopAllCoroutines()는 코루틴의 finally를 호출하지 않으므로 여기서 상태를 정리합니다.
+    public void InterruptAttack()
+    {
+        StopAllCoroutines();
+        _queuedChainSteps = 0;
+        _isAttacking = false;
+        _damageWindowActive = false;
+        NotifyWeaponHitboxesStrikeClosed();
+        if (animator != null) { animator.ResetTrigger(attackTriggerParameter); }
+    }
+
+    /// <summary>
+    /// 검 트리거가 붙을 때 호출합니다. PlayerEquipmentHolder가 자동으로 연결합니다.
+    /// </summary>
+    public void RegisterWeaponHitbox(MeleeWeaponHitbox hitbox)
+    {
+        if (hitbox == null) return;
+        if (!_registeredWeaponHitboxes.Contains(hitbox)) { _registeredWeaponHitboxes.Add(hitbox); }
+    }
+
+    /// <summary>
+    /// 검 트리거가 없어질 때 호출합니다.
+    /// </summary>
+    public void UnregisterWeaponHitbox(MeleeWeaponHitbox hitbox)
+    {
+        if (hitbox == null) return;
+        _registeredWeaponHitboxes.Remove(hitbox);
+    }
+
+    // ─── 애니메이션 이벤트 (FBX 클립에 넣은 함수 이름과 정확히 같아야 합니다) ───
+
+    /// <summary>콤보 구간이 시작될 때(선택). 이어지기/이펙트용으로 써도 됩니다.</summary>
+    public void Begin_Combo()
+    {
+        if (!_isAttacking) return;
+    }
+
+    /// <summary>이벤트 시점부터 칼날 피격을 허용합니다. 클립에 반드시 넣으세요.</summary>
+    public void Begin_Collision()
+    {
+        if (!_isAttacking) return;
+        if (useAnimationEventsForDamageWindow)
+        {
+            _hitInstanceIds.Clear();
+            _damageWindowActive = true;
+            NotifyWeaponHitboxesStrikeOpened();
+        }
+    }
+
+    /// <summary>이벤트 시점에서 칼날 피격을 끕니다. Begin_Collision과 쌍으로 넣으세요.</summary>
+    public void End_Collision()
+    {
+        if (!useAnimationEventsForDamageWindow) return;
+        _damageWindowActive = false;
+        NotifyWeaponHitboxesStrikeClosed();
+    }
+
+    /// <summary>콤보 한 동작이 끝날 때(선택).</summary>
+    public void End_Combo()
+    {
+        if (!_isAttacking) return;
+    }
+
+    /// <summary>루트 모션·이동 잠금 등에 쓰는 훅(선택).</summary>
+    public void Begin_DoAction() { }
+
+    /// <summary>루트 모션·이동 잠금 등에 쓰는 훅(선택).</summary>
+    public void End_DoAction() { }
+
+    private void NotifyWeaponHitboxesStrikeOpened()
+    {
+        for (int i = 0; i < _registeredWeaponHitboxes.Count; i++)
+        {
+            if (_registeredWeaponHitboxes[i] != null) { _registeredWeaponHitboxes[i].OnAnimatorStrikeWindowOpened(); }
+        }
+    }
+
+    private void NotifyWeaponHitboxesStrikeClosed()
+    {
+        for (int i = 0; i < _registeredWeaponHitboxes.Count; i++)
+        {
+            if (_registeredWeaponHitboxes[i] != null) { _registeredWeaponHitboxes[i].OnAnimatorStrikeWindowClosed(); }
+        }
+    }
 
     // 준비 단계에서 Animator를 찾고 입력을 연결합니다.
     // 핵심 요약: Animator가 비어 있으면 자식에서 찾습니다.
@@ -103,6 +205,14 @@ public class PlayerMeleeCombat : MonoBehaviour
         if (animator == null) { animator = GetComponentInChildren<Animator>(); }
         // 그래도 없으면 에러를 남깁니다.
         if (animator == null) { Debug.LogError("[PlayerMeleeCombat] Animator를 찾지 못했습니다."); }
+        else if (useAnimationEventsForDamageWindow && animator.gameObject != gameObject)
+        {
+            Debug.LogWarning(
+                "[PlayerMeleeCombat] Animator가 이 GameObject가 아닙니다. FBX 애니메이션 이벤트(Begin_Collision 등)는 보통 Animator가 붙은 오브젝트의 스크립트만 호출합니다. " +
+                "이 스크립트를 Animator와 같은 오브젝트로 옮기거나, Animator를 이 오브젝트로 맞추세요.");
+        }
+
+        _playerHealth = SimplePlayerHealth.Resolve(transform);
 
         // 입력 에셋이 없으면 에러를 남깁니다.
         if (inputActionAsset == null) { Debug.LogError("[PlayerMeleeCombat] Input Action Asset이 비어 있습니다. InputSystem_Actions를 넣어주세요."); return; }
@@ -148,6 +258,9 @@ public class PlayerMeleeCombat : MonoBehaviour
     {
         if (ctx.phase != InputActionPhase.Started) { return; }
 
+        if (_playerHealth == null) { _playerHealth = SimplePlayerHealth.Resolve(transform); }
+        if (_playerHealth != null && _playerHealth.IsActionLocked) { return; }
+
         // 이미 공격이 돌고 있으면 다음 1타분만 버퍼합니다(최대 maxQueuedChainSteps).
         if (_isAttacking)
         {
@@ -192,10 +305,17 @@ public class PlayerMeleeCombat : MonoBehaviour
                     animator.SetTrigger(attackTriggerParameter);
                 }
 
-                yield return new WaitForSeconds(startT);
-                _damageWindowActive = true;
-                yield return new WaitForSeconds(lenT);
-                _damageWindowActive = false;
+                if (useAnimationEventsForDamageWindow)
+                {
+                    // 피격 창은 Begin_Collision / End_Collision 애니메이션 이벤트가 열고 닫습니다.
+                }
+                else
+                {
+                    yield return new WaitForSeconds(startT);
+                    _damageWindowActive = true;
+                    yield return new WaitForSeconds(lenT);
+                    _damageWindowActive = false;
+                }
 
                 yield return WaitUntilComboAnimatorStateExited();
 
@@ -216,6 +336,7 @@ public class PlayerMeleeCombat : MonoBehaviour
             _queuedChainSteps = 0;
             _isAttacking = false;
             _damageWindowActive = false;
+            NotifyWeaponHitboxesStrikeClosed();
             if (animator != null)
             {
                 animator.ResetTrigger(attackTriggerParameter);
