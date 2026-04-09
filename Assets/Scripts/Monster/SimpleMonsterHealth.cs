@@ -13,6 +13,8 @@ public class SimpleMonsterHealth : MonoBehaviour, IDamageable
     [Tooltip("Monster_Base 등 Animator에 추가한 피격용 Trigger 이름.")]
     [SerializeField] private string getHitTriggerParameter = "GetHit";
     [SerializeField] private MonsterAttackSimple attackBehaviour;
+    [SerializeField, Min(0f)] private float hitStopDuration = 0.05f;
+    [SerializeField, Range(0f, 1f)] private float hitStopTimeScale = 0f;
 
     [Header("사망")]
     [Tooltip("Animator의 Dead 트리거 이름(Monster_Base 기본값: Dead).")]
@@ -44,6 +46,7 @@ public class SimpleMonsterHealth : MonoBehaviour, IDamageable
         if (damage <= 0) return;
 
         currentHealth -= damage;
+        HitStopController.Request(hitStopDuration, hitStopTimeScale);
 
         Debug.Log($"[SimpleMonsterHealth] {name} 체력: {currentHealth} / {maxHealth} (공격자: {(attacker != null ? attacker.name : "없음")})");
 

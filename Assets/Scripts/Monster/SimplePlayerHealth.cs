@@ -25,6 +25,8 @@ public class SimplePlayerHealth : MonoBehaviour
     [SerializeField] private float hitStunDuration = 0.5f;
     [SerializeField] private float respawnDelaySeconds = 5f;
     [SerializeField] private float hitCrossFadeDuration = 0.1f;
+    [SerializeField, Min(0f)] private float hitStopDuration = 0.05f;
+    [SerializeField, Range(0f, 1f)] private float hitStopTimeScale = 0f;
     [Tooltip("사망 클립으로 강제 전환할 때 사용합니다. 트리거만 쓰면 공격 Any State 전환과 겹쳐 Dead로 안 들어갈 때가 있습니다.")]
     [SerializeField] private float deathCrossFadeDuration = 0.12f;
 
@@ -79,6 +81,11 @@ public class SimplePlayerHealth : MonoBehaviour
         int previousHp = currentHp;
         int applied = Mathf.Max(0, damage);
         currentHp = Mathf.Max(0, currentHp - applied);
+        if (applied > 0)
+        {
+            float duration = hitStopDuration > 0f ? hitStopDuration : 0.05f;
+            HitStopController.Request(duration, hitStopTimeScale);
+        }
 
         Debug.Log(
             $"{LogTag} 피해 {applied} | 이전 체력 {previousHp} → 현재 {currentHp} / 최대 {maxHp}" +

@@ -123,7 +123,11 @@ public class PlayerDirectionalAnimationController : MonoBehaviour
 
         // Animator에 지금 상태 값을 넣습니다.
         animator.SetInteger(moveStateParameter, moveState); // Animator이 이 값으로 상태를 바꿉니다.
-        animator.SetBool(unarmedMovingParameter, !isBlockHeld);
+
+        // "방어 중이 아니고, 실제로 전진 중일 때만" 비무장 전진 상태를 켭니다.
+        // 이렇게 하면 좌/우/후진에서는 기존 이동 모션을 유지합니다.
+        bool isMovingForward = localZ > 0.01f && Mathf.Abs(localZ) >= Mathf.Abs(localX);
+        animator.SetBool(unarmedMovingParameter, !isBlockHeld && isMovingForward);
     }
 
     private bool IsBlockButtonHeld()

@@ -22,14 +22,17 @@ public class MonsterWeaponHitbox : MonoBehaviour
 
     [Header("검사")]
     [SerializeField] private LayerMask hitLayers = ~0;
-    [SerializeField] private int overlapBufferSize = 16;
-    [Tooltip("OverlapBox가 뼈 콜라이더만 잡을 때 피하기 어렵습니다. CharacterController.bounds에 더하는 여유(월드 단위).")]
-    [SerializeField] private float chaseTargetBoundsPadding = 0.2f;
+    [Tooltip("플레이어가 CharacterController만 있어 트리거를 못 받는 경우에만 켜세요. 켜면 접촉 전 선판정이 날 수 있습니다.")]
+    [SerializeField] private bool useCharacterControllerFallback = false;
+    [Tooltip("CharacterController 폴백 판정 시 플레이어 바운드에 더하는 여유(월드 단위). 선판정 방지를 위해 기본 0.")]
+    [SerializeField] private float chaseTargetBoundsPadding = 0f;
     [Header("디버그")]
     [SerializeField] private bool verboseHitDebugLog = true;
+    [Header("피격 히트 스탑")]
+    [SerializeField, Min(0f)] private float playerHitStopDuration = 0.05f;
+    [SerializeField, Range(0f, 1f)] private float playerHitStopTimeScale = 0f;
 
     private BoxCollider _box;
-    private Collider[] _buffer;
     private int _lastSwingConsumed = -1;
 
     private void Awake()
@@ -49,8 +52,6 @@ public class MonsterWeaponHitbox : MonoBehaviour
             rb.useGravity = false;
         }
 
-        int cap = Mathf.Clamp(overlapBufferSize, 4, 64);
-        _buffer = new Collider[cap];
     }
 
     private void ApplyScaledHitSize()
@@ -91,39 +92,40 @@ public class MonsterWeaponHitbox : MonoBehaviour
     {
         if (attackSource == null || !_box.enabled) return;
         if (!attackSource.IsWeaponDamageWindowActive) return;
+        if (!useCharacterControllerFallback) return;
 
         int swingId = attackSource.WeaponSwingId;
         if (swingId == _lastSwingConsumed) return;
 
-        Physics.SyncTransforms();
-
-        if (TryHitFromPhysicsOverlap(swingId)) return;
+        // 우선순위는 실제 트리거 접촉입니다. (OnTriggerEnter/Stay)
+        // 플레이어가 CharacterController만 쓰는 경우를 위해서만 폴백을 둡니다.
         TryHitChaseTargetCharacterController(swingId);
     }
 
-    private bool TryHitFromPhysicsOverlap(int swingId)
+    private void OnTriggerEnter(Collider other)
     {
-        int count = Physics.OverlapBoxNonAlloc(
-            _box.bounds.center,
-            _box.bounds.extents,
-            _buffer,
-            _box.transform.rotation,
-            hitLayers,
-            QueryTriggerInteraction.Collide);
+        TryHitByTrigger(other);
+    }
 
-        for (int i = 0; i < count; i++)
-        {
-            Collider c = _buffer[i];
-            if (c == null || c == _box) continue;
-            if (monsterRoot != null && c.transform.IsChildOf(monsterRoot)) continue;
+    private void OnTriggerStay(Collider other)
+    {
+        TryHitByTrigger(other);
+    }
 
-            SimplePlayerHealth hp = SimplePlayerHealth.Resolve(c.transform);
-            if (hp == null || hp.IsDead) continue;
+    private void TryHitByTrigger(Collider other)
+    {
+        if (attackSource == null || !_box.enabled) return;
+        if (!attackSource.IsWeaponDamageWindowActive) return;
+        if (other == null || other == _box) return;
+        if (((1 << other.gameObject.layer) & hitLayers.value) == 0) return;
+        if (monsterRoot != null && other.transform.IsChildOf(monsterRoot)) return;
 
-            if (TryApplyPlayerHitDamage(hp, swingId)) return true;
-        }
+        int swingId = attackSource.WeaponSwingId;
+        if (swingId == _lastSwingConsumed) return;
 
-        return false;
+        SimplePlayerHealth hp = SimplePlayerHealth.Resolve(other.transform);
+        if (hp == null || hp.IsDead) return;
+        TryApplyPlayerHitDamage(hp, swingId);
     }
 
     /// <summary>
@@ -169,6 +171,8 @@ public class MonsterWeaponHitbox : MonoBehaviour
         {
             Debug.Log($"{LogTag} 피격 적용 | player={hp.name} | attacker={(attacker != null ? attacker.name : "null")} | dmg={attackSource.AttackDamage} | swing={swingId}");
         }
+        float duration = playerHitStopDuration > 0f ? playerHitStopDuration : 0.05f;
+        HitStopController.Request(duration, playerHitStopTimeScale);
         hp.TakeDamage(attackSource.AttackDamage, attacker);
         _lastSwingConsumed = swingId;
         return true;

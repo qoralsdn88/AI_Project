@@ -14,19 +14,13 @@ public class MeleeWeaponHitbox : MonoBehaviour
     [Tooltip("Begin_Collision 직후 한 프레임 동안 트리거를 껐다 켜서, 이미 겹쳐 있던 적에게도 스윙이 새로 닿은 것처럼 판정하게 합니다.")]
     [SerializeField] private bool refreshTriggerColliderOnStrikeOpen = true;
 
-    [Tooltip("OverlapBox 검사 시 사용하는 버퍼 크기입니다.")]
-    [SerializeField] private int overlapBufferSize = 24;
-
     private Collider _selfCollider;
-    private Collider[] _overlapBuffer;
     private Coroutine _colliderRefreshRoutine;
 
     private void Awake()
     {
         _selfCollider = GetComponent<Collider>();
         if (_selfCollider != null && !_selfCollider.isTrigger) { Debug.LogWarning("[MeleeWeaponHitbox] Collider를 Trigger로 켜주세요."); }
-        int cap = Mathf.Clamp(overlapBufferSize, 4, 64);
-        _overlapBuffer = new Collider[cap];
     }
 
     private void Start()
@@ -75,25 +69,15 @@ public class MeleeWeaponHitbox : MonoBehaviour
         _colliderRefreshRoutine = null;
     }
 
-    private void FixedUpdate()
+    // 실제 트리거 접촉 시점에만 타격을 적용해 "닿기 전 히트"를 방지합니다.
+    private void OnTriggerEnter(Collider other)
     {
-        if (combat == null || _selfCollider == null || !_selfCollider.enabled) { return; }
-        if (!combat.IsDamageWindowActive) { return; }
+        TryHitCollider(other);
+    }
 
-        int count = Physics.OverlapBoxNonAlloc(
-            _selfCollider.bounds.center,
-            _selfCollider.bounds.extents,
-            _overlapBuffer,
-            _selfCollider.transform.rotation,
-            Physics.AllLayers,
-            QueryTriggerInteraction.Collide);
-
-        for (int i = 0; i < count; i++)
-        {
-            Collider c = _overlapBuffer[i];
-            if (c == null || c == _selfCollider) { continue; }
-            TryHitCollider(c);
-        }
+    private void OnTriggerStay(Collider other)
+    {
+        TryHitCollider(other);
     }
 
     private void TryHitCollider(Collider other)

@@ -101,8 +101,11 @@ MonoBehaviour:
   hitLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  overlapBufferSize: 16
+  useCharacterControllerFallback: 0
   chaseTargetBoundsPadding: 0.2
+  verboseHitDebugLog: 1
+  playerHitStopDuration: 0.05
+  playerHitStopTimeScale: 0
 --- !u!1 &991091120
 GameObject:
   m_ObjectHideFlags: 0
@@ -204,8 +207,11 @@ MonoBehaviour:
   hitLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  overlapBufferSize: 16
+  useCharacterControllerFallback: 0
   chaseTargetBoundsPadding: 0.2
+  verboseHitDebugLog: 1
+  playerHitStopDuration: 0.05
+  playerHitStopTimeScale: 0
 --- !u!1 &473231640450517
 GameObject:
   m_ObjectHideFlags: 0
@@ -7462,7 +7468,7 @@ MonoBehaviour:
   detectChase: {fileID: 793490345260667477}
   animator: {fileID: 8515176627030191889}
   attackDamage: 10
-  attackCooldown: 1.5
+  attackCooldown: 3
   attackTriggerParam: Attack
   weaponDamageWindowDuration: 0.35
   useAttackVariants: 1
@@ -7511,6 +7517,8 @@ MonoBehaviour:
   animator: {fileID: 8515176627030191889}
   getHitTriggerParameter: GetHit
   attackBehaviour: {fileID: 1048768281967659205}
+  hitStopDuration: 0.2
+  hitStopTimeScale: 0
   deathTriggerParameter: Dead
   deathStateName: Dead
   removeAfterDeathAnimationSeconds: 3
