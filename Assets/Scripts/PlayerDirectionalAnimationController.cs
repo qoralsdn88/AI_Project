@@ -1,5 +1,6 @@
 // 유니티 기본 기능을 사용하기 위해 꼭 필요합니다.
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 // 이 스크립트를 붙이면 Animator가 같이 있어야 합니다.
 [RequireComponent(typeof(Animator))]
@@ -10,6 +11,8 @@ public class PlayerDirectionalAnimationController : MonoBehaviour
     // Animator에서 사용할 정수 파라미터 이름입니다.
     // 핵심 요약: Animator Controller의 `MoveState`와 이름을 똑같이 맞춰야 합니다.
     [SerializeField] private string moveStateParameter = "MoveState";
+    [SerializeField] private string blockHeldParameter = "IsBlockHeld";
+    [SerializeField] private string unarmedMovingParameter = "IsUnarmedMoving";
 
     // 이 값보다 느리면 Idle로 바꾸는 속도 기준입니다.
     // 핵심 요약: 너무 작게 두면 미세 움직임에도 걷기 애니메이션이 나옵니다.
@@ -28,6 +31,7 @@ public class PlayerDirectionalAnimationController : MonoBehaviour
     [SerializeField] private PlayerMeleeCombat meleeCombat;
 
     [SerializeField] private SimplePlayerHealth playerHealth;
+    [SerializeField] private PlayerShieldBlock shieldBlock;
 
     // 오브젝트가 준비되자마자 실행되는 함수입니다.
     // 핵심 요약: Awake에서 컴포넌트를 찾아서 Update에서 안전하게 쓰게 합니다.
@@ -40,6 +44,7 @@ public class PlayerDirectionalAnimationController : MonoBehaviour
         // 전투 스크립트가 비어 있으면 같은 오브젝트에서 찾습니다.
         if (meleeCombat == null) { meleeCombat = PlayerMeleeCombat.Resolve(transform); }
         if (playerHealth == null) { playerHealth = SimplePlayerHealth.Resolve(transform); }
+        if (shieldBlock == null) { shieldBlock = PlayerShieldBlock.Resolve(transform); }
 
         // Animator가 없으면 에러를 남깁니다.
         if (animator == null) { Debug.LogError("[PlayerDirectionalAnimationController] Animator가 없습니다. Player에 Animator 컴포넌트를 추가해주세요."); } // 찾기 실패 시 바로 원인을 알려줍니다.
@@ -80,12 +85,15 @@ public class PlayerDirectionalAnimationController : MonoBehaviour
 
         // 평면 속도의 크기를 계산합니다.
         float speed = worldVelocity.magnitude; // 속도가 얼마나 빠른지 숫자로 봅니다.
+        bool isBlockHeld = IsBlockButtonHeld();
+        animator.SetBool(blockHeldParameter, isBlockHeld);
 
         // 속도가 너무 작으면 Idle입니다.
         if (speed < minSpeedToWalk)
         {
             // 0은 Idle 상태로 맞춥니다.
             animator.SetInteger(moveStateParameter, 0); // Animator의 Idle 상태 조건에 써야 합니다.
+            animator.SetBool(unarmedMovingParameter, false);
             // Idle이면 더 계산할 필요가 없으니 끝냅니다.
             return; // 다음 프레임으로 넘깁니다.
         }
@@ -115,6 +123,20 @@ public class PlayerDirectionalAnimationController : MonoBehaviour
 
         // Animator에 지금 상태 값을 넣습니다.
         animator.SetInteger(moveStateParameter, moveState); // Animator이 이 값으로 상태를 바꿉니다.
+        animator.SetBool(unarmedMovingParameter, !isBlockHeld);
+    }
+
+    private bool IsBlockButtonHeld()
+    {
+        if (shieldBlock == null) { shieldBlock = PlayerShieldBlock.Resolve(transform); }
+        if (shieldBlock != null) { return shieldBlock.IsBlockInputHeld; }
+#if ENABLE_INPUT_SYSTEM
+        if (Mouse.current != null && Mouse.current.rightButton.isPressed) { return true; }
+#endif
+#if ENABLE_LEGACY_INPUT_MANAGER
+        if (Input.GetMouseButton(1)) { return true; }
+#endif
+        return false;
     }
 }
 

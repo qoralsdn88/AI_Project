@@ -33,6 +33,9 @@ public class PlayerEquipmentHolder : MonoBehaviour
     // 방패의 로컬 스케일입니다.
     // 핵심 요약: 손 크기에 맞게 줄입니다.
     [SerializeField] private Vector3 shieldLocalScale = Vector3.one;
+    [SerializeField] private bool lockShieldRotationDuringDefense = true;
+    [SerializeField] private int shieldDefenseAnimatorLayer = 0;
+    [SerializeField] private string[] shieldDefenseStateNames = { "ShieldImpact", "Block", "Guard" };
 
     // 칼의 로컬 위치입니다.
     // 핵심 요약: 손 안에 잡히게 옮깁니다.
@@ -139,6 +142,38 @@ public class PlayerEquipmentHolder : MonoBehaviour
         instance.transform.localRotation = Quaternion.Euler(shieldLocalEuler);
         // 로컬 크기를 맞춥니다.
         instance.transform.localScale = shieldLocalScale;
+
+        StabilizeShieldAttachment(instance);
+
+        if (lockShieldRotationDuringDefense)
+        {
+            ShieldDefenseRotationLock rotationLock = instance.GetComponent<ShieldDefenseRotationLock>();
+            if (rotationLock == null) { rotationLock = instance.AddComponent<ShieldDefenseRotationLock>(); }
+            rotationLock.Initialize(targetAnimator, shieldDefenseAnimatorLayer, shieldDefenseStateNames);
+        }
+    }
+
+    // 방패 프리팹 내부 물리/애니메이터 간섭으로 손에서 이탈하는 상황을 방지합니다.
+    private static void StabilizeShieldAttachment(GameObject shieldInstance)
+    {
+        if (shieldInstance == null) { return; }
+
+        Rigidbody[] rigidbodies = shieldInstance.GetComponentsInChildren<Rigidbody>(true);
+        for (int i = 0; i < rigidbodies.Length; i++)
+        {
+            Rigidbody rb = rigidbodies[i];
+            rb.isKinematic = true;
+            rb.useGravity = false;
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.constraints = RigidbodyConstraints.FreezeAll;
+        }
+
+        Animator[] animators = shieldInstance.GetComponentsInChildren<Animator>(true);
+        for (int i = 0; i < animators.Length; i++)
+        {
+            animators[i].enabled = false;
+        }
     }
 
     // 칼 한 개를 붙이고 충돌 트리거를 만드는 함수입니다.

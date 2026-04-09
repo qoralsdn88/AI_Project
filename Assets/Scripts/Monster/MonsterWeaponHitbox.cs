@@ -8,6 +8,8 @@ using UnityEngine;
 [RequireComponent(typeof(BoxCollider))]
 public class MonsterWeaponHitbox : MonoBehaviour
 {
+    private const string LogTag = "[MonsterWeaponHitbox]";
+
     [SerializeField] private MonsterAttackSimple attackSource;
     [Tooltip("이 몬스터 루트 이하 콜라이더는 무시(자해 방지)")]
     [SerializeField] private Transform monsterRoot;
@@ -23,6 +25,8 @@ public class MonsterWeaponHitbox : MonoBehaviour
     [SerializeField] private int overlapBufferSize = 16;
     [Tooltip("OverlapBox가 뼈 콜라이더만 잡을 때 피하기 어렵습니다. CharacterController.bounds에 더하는 여유(월드 단위).")]
     [SerializeField] private float chaseTargetBoundsPadding = 0.2f;
+    [Header("디버그")]
+    [SerializeField] private bool verboseHitDebugLog = true;
 
     private BoxCollider _box;
     private Collider[] _buffer;
@@ -116,9 +120,7 @@ public class MonsterWeaponHitbox : MonoBehaviour
             SimplePlayerHealth hp = SimplePlayerHealth.Resolve(c.transform);
             if (hp == null || hp.IsDead) continue;
 
-            hp.TakeDamage(attackSource.AttackDamage, attackSource.gameObject);
-            _lastSwingConsumed = swingId;
-            return true;
+            if (TryApplyPlayerHitDamage(hp, swingId)) return true;
         }
 
         return false;
@@ -144,7 +146,31 @@ public class MonsterWeaponHitbox : MonoBehaviour
 
         if (!_box.bounds.Intersects(playerBounds)) return;
 
-        hp.TakeDamage(attackSource.AttackDamage, attackSource.gameObject);
+        TryApplyPlayerHitDamage(hp, swingId);
+    }
+
+    /// <summary>
+    /// 방패 정면 방어에 성공하면 피해 없이 이번 스윙만 소모합니다.
+    /// </summary>
+    private bool TryApplyPlayerHitDamage(SimplePlayerHealth hp, int swingId)
+    {
+        GameObject attacker = attackSource != null ? attackSource.gameObject : null;
+        if (PlayerShieldBlock.TryBlockHit(hp.transform, attacker))
+        {
+            if (verboseHitDebugLog)
+            {
+                Debug.Log($"{LogTag} 가드됨 | player={hp.name} | attacker={(attacker != null ? attacker.name : "null")} | swing={swingId}");
+            }
+            _lastSwingConsumed = swingId;
+            return true;
+        }
+
+        if (verboseHitDebugLog)
+        {
+            Debug.Log($"{LogTag} 피격 적용 | player={hp.name} | attacker={(attacker != null ? attacker.name : "null")} | dmg={attackSource.AttackDamage} | swing={swingId}");
+        }
+        hp.TakeDamage(attackSource.AttackDamage, attacker);
         _lastSwingConsumed = swingId;
+        return true;
     }
 }
