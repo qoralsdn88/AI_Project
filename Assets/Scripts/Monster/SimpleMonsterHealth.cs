@@ -28,12 +28,14 @@ public class SimpleMonsterHealth : MonoBehaviour, IDamageable
 
     private int currentHealth;
     private bool isDeathStarted;
+    private MonsterOrcAssassinStealthSimple stealthSkill; // 오크 어쌔신 은신 스킬이 있으면 여기에 캐시합니다.
 
     private void Awake()
     {
         currentHealth = maxHealth;
         if (animator == null) { animator = GetComponentInChildren<Animator>(); }
         if (attackBehaviour == null) { TryGetComponent(out attackBehaviour); }
+        TryGetComponent(out stealthSkill); // 은신 스킬 컴포넌트가 있으면 한 번만 찾아 둡니다.
     }
 
     public void TakeDamage(int damage, GameObject attacker)
@@ -47,6 +49,7 @@ public class SimpleMonsterHealth : MonoBehaviour, IDamageable
 
         if (IsDamageFromPlayer(attacker))
         {
+            if (stealthSkill != null) { stealthSkill.NotifyHitByPlayer(); } // 플레이어에게 맞으면 은신을 즉시 풉니다.
             string hitNote;
             if (currentHealth <= 0) hitNote = " | 사망 처리";
             else if (ShouldPlayHitReaction()) hitNote = " | 피격 반응 재생";
