@@ -28,9 +28,10 @@ public class MonsterWeaponHitbox : MonoBehaviour
     [SerializeField] private float chaseTargetBoundsPadding = 0f;
     [Header("디버그")]
     [SerializeField] private bool verboseHitDebugLog = true;
-    [Header("피격 히트 스탑")]
-    [SerializeField, Min(0f)] private float playerHitStopDuration = 0.05f;
-    [SerializeField, Range(0f, 1f)] private float playerHitStopTimeScale = 0f;
+
+    [Header("방어")]
+    [Tooltip("정면 가드 성공 시 원래 공격 피해량에 곱합니다. 0.2 = 20%만 받음.")]
+    [SerializeField, Range(0f, 1f)] private float blockDamageMultiplier = 0.2f;
 
     private BoxCollider _box;
     private int _lastSwingConsumed = -1;
@@ -125,7 +126,8 @@ public class MonsterWeaponHitbox : MonoBehaviour
 
         SimplePlayerHealth hp = SimplePlayerHealth.Resolve(other.transform);
         if (hp == null || hp.IsDead) return;
-        TryApplyPlayerHitDamage(hp, swingId);
+        Vector3 hitPoint = other.ClosestPoint(transform.position);
+        TryApplyPlayerHitDamage(hp, swingId, hitPoint);
     }
 
     /// <summary>
@@ -148,21 +150,26 @@ public class MonsterWeaponHitbox : MonoBehaviour
 
         if (!_box.bounds.Intersects(playerBounds)) return;
 
-        TryApplyPlayerHitDamage(hp, swingId);
+        Vector3 hitPoint = playerBounds.ClosestPoint(_box.bounds.center);
+        TryApplyPlayerHitDamage(hp, swingId, hitPoint);
     }
 
     /// <summary>
-    /// 방패 정면 방어에 성공하면 피해 없이 이번 스윙만 소모합니다.
+    /// 방패 정면 방어에 성공하면 원래 피해량의 일부(기본 20%)만 받고 이번 스윙을 소모합니다.
     /// </summary>
-    private bool TryApplyPlayerHitDamage(SimplePlayerHealth hp, int swingId)
+    private bool TryApplyPlayerHitDamage(SimplePlayerHealth hp, int swingId, Vector3 hitPoint)
     {
         GameObject attacker = attackSource != null ? attackSource.gameObject : null;
         if (PlayerShieldBlock.TryBlockHit(hp.transform, attacker))
         {
+            int baseDamage = attackSource != null ? attackSource.AttackDamage : 0;
+            int guardedDamage = Mathf.Max(0, Mathf.RoundToInt(baseDamage * blockDamageMultiplier));
             if (verboseHitDebugLog)
             {
-                Debug.Log($"{LogTag} 가드됨 | player={hp.name} | attacker={(attacker != null ? attacker.name : "null")} | swing={swingId}");
+                Debug.Log(
+                    $"{LogTag} 가드 | 피해 {guardedDamage}/{baseDamage} | player={hp.name} | attacker={(attacker != null ? attacker.name : "null")} | swing={swingId}");
             }
+            if (guardedDamage > 0) hp.TakeDamage(guardedDamage, attacker, hitPoint);
             _lastSwingConsumed = swingId;
             return true;
         }
@@ -171,10 +178,9 @@ public class MonsterWeaponHitbox : MonoBehaviour
         {
             Debug.Log($"{LogTag} 피격 적용 | player={hp.name} | attacker={(attacker != null ? attacker.name : "null")} | dmg={attackSource.AttackDamage} | swing={swingId}");
         }
-        float duration = playerHitStopDuration > 0f ? playerHitStopDuration : 0.05f;
-        HitStopController.Request(duration, playerHitStopTimeScale);
-        hp.TakeDamage(attackSource.AttackDamage, attacker);
+        hp.TakeDamage(attackSource.AttackDamage, attacker, hitPoint);
         _lastSwingConsumed = swingId;
         return true;
     }
+
 }

@@ -7,5 +7,6 @@ public interface IDamageable
 {
     // damage만큼 체력을 줄입니다.
     // 핵심 요약: 공격 스크립트는 이 함수만 부르면 됩니다.
-    void TakeDamage(int damage, GameObject attacker);
+    // hitPoint는 피격 지점(월드). 알 수 없으면 HitPoint.Unspecified를 넘깁니다.
+    void TakeDamage(int damage, GameObject attacker, Vector3 hitPoint);
 }

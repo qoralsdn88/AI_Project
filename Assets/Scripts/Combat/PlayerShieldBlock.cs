@@ -41,17 +41,10 @@ public class PlayerShieldBlock : MonoBehaviour
     /// </summary>
     public bool IsBlockInputHeld => IsBlockButtonHeld();
 
-    public static PlayerShieldBlock Resolve(Transform t)
-    {
-        if (t == null) return null;
-        if (t.TryGetComponent(out PlayerShieldBlock direct)) return direct;
-        PlayerShieldBlock p = t.GetComponentInParent<PlayerShieldBlock>(true);
-        if (p != null) return p;
-        return t.GetComponentInChildren<PlayerShieldBlock>(true);
-    }
+    public static PlayerShieldBlock Resolve(Transform t) => TransformHierarchy.FindComponent<PlayerShieldBlock>(t);
 
     /// <summary>
-    /// 몬스터 히트박스에서 호출: 방어에 성공하면 true이며 이때는 피해를 주지 않습니다.
+    /// 몬스터 히트박스에서 호출: 정면 가드에 성공하면 true입니다(실제 피해량은 호출 측에서 감소 적용).
     /// </summary>
     public static bool TryBlockHit(Transform playerTransform, GameObject attacker)
     {

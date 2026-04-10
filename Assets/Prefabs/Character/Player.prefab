@@ -3970,10 +3970,15 @@ MonoBehaviour:
   hitStunDuration: 0.5
   respawnDelaySeconds: 5
   hitCrossFadeDuration: 0.1
+  hitStopDelayAfterHitReactSeconds: 0.1
   hitStopDuration: 0.2
   hitStopTimeScale: 0
   deathCrossFadeDuration: 0.12
   meleeCombat: {fileID: 8820010020034455667}
+  blockHeldParameter: IsBlockHeld
+  unarmedMovingParameter: IsUnarmedMoving
+  moveStateParameter: MoveState
+  shieldImpactTrigger: ShieldImpact
 --- !u!114 &2934704770997051122
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5675,7 +5680,7 @@ Transform:
   m_GameObject: {fileID: 5558031571985220824}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0.311, z: 0.078}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

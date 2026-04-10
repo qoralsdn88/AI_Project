@@ -104,8 +104,7 @@ MonoBehaviour:
   useCharacterControllerFallback: 0
   chaseTargetBoundsPadding: 0.2
   verboseHitDebugLog: 1
-  playerHitStopDuration: 0.05
-  playerHitStopTimeScale: 0
+  blockDamageMultiplier: 0.2
 --- !u!1 &991091120
 GameObject:
   m_ObjectHideFlags: 0
@@ -210,8 +209,7 @@ MonoBehaviour:
   useCharacterControllerFallback: 0
   chaseTargetBoundsPadding: 0.2
   verboseHitDebugLog: 1
-  playerHitStopDuration: 0.05
-  playerHitStopTimeScale: 0
+  blockDamageMultiplier: 0.2
 --- !u!1 &473231640450517
 GameObject:
   m_ObjectHideFlags: 0
@@ -7517,7 +7515,8 @@ MonoBehaviour:
   animator: {fileID: 8515176627030191889}
   getHitTriggerParameter: GetHit
   attackBehaviour: {fileID: 1048768281967659205}
-  hitStopDuration: 0.2
+  hitStopDelayAfterHitReactSeconds: 0.1
+  hitStopDuration: 0.1
   hitStopTimeScale: 0
   deathTriggerParameter: Dead
   deathStateName: Dead

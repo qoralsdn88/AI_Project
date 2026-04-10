@@ -41,6 +41,27 @@ public class HitStopController : MonoBehaviour
         _instance.RequestInternal(durationSeconds, timeScale);
     }
 
+    /// <summary>
+    /// 실시간으로 <paramref name="delayRealtimeSeconds"/> 만큼 지난 뒤 히트 스탑을 적용합니다.
+    /// (Time.timeScale과 무관 — 피격 애니가 먼저 재생된 뒤에 멈추고 싶을 때 사용)
+    /// </summary>
+    public static void RequestAfterRealtimeDelay(float delayRealtimeSeconds, float durationSeconds, float timeScale = 0f)
+    {
+        EnsureExists();
+        if (_instance == null) return;
+        _instance.StartCoroutine(_instance.CoRequestAfterRealtimeDelay(delayRealtimeSeconds, durationSeconds, timeScale));
+    }
+
+    private IEnumerator CoRequestAfterRealtimeDelay(float delayRealtimeSeconds, float durationSeconds, float timeScale)
+    {
+        if (delayRealtimeSeconds > 0f)
+        {
+            yield return new WaitForSecondsRealtime(delayRealtimeSeconds);
+        }
+
+        RequestInternal(durationSeconds, timeScale);
+    }
+
     private void RequestInternal(float durationSeconds, float timeScale)
     {
         float duration = Mathf.Max(0f, durationSeconds);

@@ -13,6 +13,8 @@ public class SimpleMonsterHealth : MonoBehaviour, IDamageable
     [Tooltip("Monster_Base 등 Animator에 추가한 피격용 Trigger 이름.")]
     [SerializeField] private string getHitTriggerParameter = "GetHit";
     [SerializeField] private MonsterAttackSimple attackBehaviour;
+    [Tooltip("피격(또는 사망) 애니가 재생된 뒤, 이 시간(실시간 초) 후에 히트 스탑이 걸립니다.")]
+    [SerializeField, Min(0f)] private float hitStopDelayAfterHitReactSeconds = 0.1f;
     [SerializeField, Min(0f)] private float hitStopDuration = 0.05f;
     [SerializeField, Range(0f, 1f)] private float hitStopTimeScale = 0f;
 
@@ -32,6 +34,9 @@ public class SimpleMonsterHealth : MonoBehaviour, IDamageable
     private bool isDeathStarted;
     private MonsterOrcAssassinStealthSimple stealthSkill; // 오크 어쌔신 은신 스킬이 있으면 여기에 캐시합니다.
 
+    public int CurrentHealth => currentHealth;
+    public int MaxHealth => maxHealth;
+
     private void Awake()
     {
         currentHealth = maxHealth;
@@ -40,13 +45,16 @@ public class SimpleMonsterHealth : MonoBehaviour, IDamageable
         TryGetComponent(out stealthSkill); // 은신 스킬 컴포넌트가 있으면 한 번만 찾아 둡니다.
     }
 
-    public void TakeDamage(int damage, GameObject attacker)
+    public void TakeDamage(int damage, GameObject attacker, Vector3 hitPoint)
     {
         if (isDeathStarted) return;
         if (damage <= 0) return;
 
+        Vector3 vfxPos = HitPoint.IsUnspecified(hitPoint) ? transform.position + Vector3.up * 1f : hitPoint;
+        HitImpactVfx.PlayAt(vfxPos, attacker);
+
         currentHealth -= damage;
-        HitStopController.Request(hitStopDuration, hitStopTimeScale);
+        float hitStopLen = hitStopDuration > 0f ? hitStopDuration : 0.05f;
 
         Debug.Log($"[SimpleMonsterHealth] {name} 체력: {currentHealth} / {maxHealth} (공격자: {(attacker != null ? attacker.name : "없음")})");
 
@@ -60,15 +68,19 @@ public class SimpleMonsterHealth : MonoBehaviour, IDamageable
             Debug.Log($"[SimpleMonsterHealth] 플레이어 공격 적중: {name} | 데미지 {damage} | 남은 HP {currentHealth}/{maxHealth}{hitNote}");
         }
 
-        if (currentHealth > 0 && ShouldPlayHitReaction())
+        if (currentHealth <= 0)
+        {
+            StartDeathIfNeeded();
+            HitStopController.RequestAfterRealtimeDelay(hitStopDelayAfterHitReactSeconds, hitStopLen, hitStopTimeScale);
+            return;
+        }
+
+        if (ShouldPlayHitReaction())
         {
             PlayHitReaction();
         }
 
-        if (currentHealth <= 0)
-        {
-            StartDeathIfNeeded();
-        }
+        HitStopController.RequestAfterRealtimeDelay(hitStopDelayAfterHitReactSeconds, hitStopLen, hitStopTimeScale);
     }
 
     private void StartDeathIfNeeded()

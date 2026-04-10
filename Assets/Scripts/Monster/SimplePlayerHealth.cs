@@ -25,6 +25,8 @@ public class SimplePlayerHealth : MonoBehaviour
     [SerializeField] private float hitStunDuration = 0.5f;
     [SerializeField] private float respawnDelaySeconds = 5f;
     [SerializeField] private float hitCrossFadeDuration = 0.1f;
+    [Tooltip("피격(또는 사망) 애니가 재생된 뒤, 이 시간(실시간 초) 후에 히트 스탑이 걸립니다.")]
+    [SerializeField, Min(0f)] private float hitStopDelayAfterHitReactSeconds = 0.1f;
     [SerializeField, Min(0f)] private float hitStopDuration = 0.05f;
     [SerializeField, Range(0f, 1f)] private float hitStopTimeScale = 0f;
     [Tooltip("사망 클립으로 강제 전환할 때 사용합니다. 트리거만 쓰면 공격 Any State 전환과 겹쳐 Dead로 안 들어갈 때가 있습니다.")]
@@ -32,6 +34,14 @@ public class SimplePlayerHealth : MonoBehaviour
 
     [Header("연결 (비우면 자동 검색)")]
     [SerializeField] private PlayerMeleeCombat meleeCombat;
+
+    [Header("Animator — 사망 시 정리")]
+    [Tooltip("방어 중 사망 시 IsBlockHeld 등이 Dead 전환과 경쟁하지 않게 끕니다. PlayerDirectionalAnimationController 기본값과 맞춥니다.")]
+    [SerializeField] private string blockHeldParameter = "IsBlockHeld";
+    [SerializeField] private string unarmedMovingParameter = "IsUnarmedMoving";
+    [SerializeField] private string moveStateParameter = "MoveState";
+    [Tooltip("가드 성공 직후 사망 시 남은 ShieldImpact 트리거가 Dead를 덮지 않게 리셋합니다.")]
+    [SerializeField] private string shieldImpactTrigger = "ShieldImpact";
 
     private Vector3 _spawnPosition;
     private Quaternion _spawnRotation;
@@ -46,14 +56,7 @@ public class SimplePlayerHealth : MonoBehaviour
     /// <paramref name="t"/>가 가리키는 오브젝트, 그 부모, 그 자식에서 체력 컴포넌트를 찾습니다.
     /// (예: Monster 쪽에 연결한 player가 모델 자식이고 체력은 루트에만 있을 때.)
     /// </summary>
-    public static SimplePlayerHealth Resolve(Transform t)
-    {
-        if (t == null) return null;
-        if (t.TryGetComponent(out SimplePlayerHealth direct)) return direct;
-        SimplePlayerHealth p = t.GetComponentInParent<SimplePlayerHealth>(true);
-        if (p != null) return p;
-        return t.GetComponentInChildren<SimplePlayerHealth>(true);
-    }
+    public static SimplePlayerHealth Resolve(Transform t) => TransformHierarchy.FindComponent<SimplePlayerHealth>(t);
 
     private void Awake()
     {
@@ -71,21 +74,28 @@ public class SimplePlayerHealth : MonoBehaviour
 
     public void TakeDamage(int damage)
     {
-        TakeDamage(damage, null);
+        TakeDamage(damage, null, HitPoint.Unspecified);
     }
 
     public void TakeDamage(int damage, GameObject attacker)
+    {
+        TakeDamage(damage, attacker, HitPoint.Unspecified);
+    }
+
+    public void TakeDamage(int damage, GameObject attacker, Vector3 hitPoint)
     {
         if (_isDead) return;
 
         int previousHp = currentHp;
         int applied = Mathf.Max(0, damage);
-        currentHp = Mathf.Max(0, currentHp - applied);
         if (applied > 0)
         {
-            float duration = hitStopDuration > 0f ? hitStopDuration : 0.05f;
-            HitStopController.Request(duration, hitStopTimeScale);
+            Vector3 vfxPos = HitPoint.IsUnspecified(hitPoint) ? transform.position + Vector3.up * 1f : hitPoint;
+            HitImpactVfx.PlayAt(vfxPos, attacker);
         }
+
+        currentHp = Mathf.Max(0, currentHp - applied);
+        float hitStopLen = applied > 0 ? (hitStopDuration > 0f ? hitStopDuration : 0.05f) : 0f;
 
         Debug.Log(
             $"{LogTag} 피해 {applied} | 이전 체력 {previousHp} → 현재 {currentHp} / 최대 {maxHp}" +
@@ -95,10 +105,19 @@ public class SimplePlayerHealth : MonoBehaviour
         {
             Debug.Log($"{LogTag} 사망 처리 시작 (HP 0)");
             EnterDeath();
+            if (hitStopLen > 0f)
+            {
+                HitStopController.RequestAfterRealtimeDelay(hitStopDelayAfterHitReactSeconds, hitStopLen, hitStopTimeScale);
+            }
+
             return;
         }
 
         ApplyHitReaction();
+        if (hitStopLen > 0f)
+        {
+            HitStopController.RequestAfterRealtimeDelay(hitStopDelayAfterHitReactSeconds, hitStopLen, hitStopTimeScale);
+        }
     }
 
     private void ApplyHitReaction()
@@ -112,6 +131,59 @@ public class SimplePlayerHealth : MonoBehaviour
     /// 트리거(Any State)만 쓰면 Attack·콤보 전환과 같은 프레임에 경쟁할 수 있어,
     /// 레이어 0에 Dead 상태가 있으면 CrossFade로 먼저 강제 전환합니다.
     /// </summary>
+    /// <summary>
+    /// 방어 유지 bool·이동 블렌드·가드 임팩트 트리거가 Dead CrossFade/트리거와 동시에 켜져 있으면
+    /// 베이스 레이어가 Block 쪽에 머물러 사망 모션이 안 나올 수 있어, 사망 직전에 정리합니다.
+    /// </summary>
+    private void ClearAnimatorStateCompetingWithDeath()
+    {
+        if (animator == null) return;
+
+        TrySetAnimatorBool(blockHeldParameter, false);
+        TrySetAnimatorBool(unarmedMovingParameter, false);
+        TrySetAnimatorInt(moveStateParameter, 0);
+        TryResetAnimatorTrigger(shieldImpactTrigger);
+    }
+
+    private void TrySetAnimatorBool(string paramName, bool value)
+    {
+        if (animator == null || string.IsNullOrEmpty(paramName)) return;
+        foreach (AnimatorControllerParameter p in animator.parameters)
+        {
+            if (p.type == AnimatorControllerParameterType.Bool && p.name == paramName)
+            {
+                animator.SetBool(paramName, value);
+                return;
+            }
+        }
+    }
+
+    private void TrySetAnimatorInt(string paramName, int value)
+    {
+        if (animator == null || string.IsNullOrEmpty(paramName)) return;
+        foreach (AnimatorControllerParameter p in animator.parameters)
+        {
+            if (p.type == AnimatorControllerParameterType.Int && p.name == paramName)
+            {
+                animator.SetInteger(paramName, value);
+                return;
+            }
+        }
+    }
+
+    private void TryResetAnimatorTrigger(string paramName)
+    {
+        if (animator == null || string.IsNullOrEmpty(paramName)) return;
+        foreach (AnimatorControllerParameter p in animator.parameters)
+        {
+            if (p.type == AnimatorControllerParameterType.Trigger && p.name == paramName)
+            {
+                animator.ResetTrigger(paramName);
+                return;
+            }
+        }
+    }
+
     private void PlayDeathAnimation()
     {
         if (animator == null) return;
@@ -168,6 +240,7 @@ public class SimplePlayerHealth : MonoBehaviour
         InterruptMelee();
         _actionLockUntilTime = float.MaxValue;
 
+        ClearAnimatorStateCompetingWithDeath();
         PlayDeathAnimation();
 
         if (_respawnRoutine != null) { StopCoroutine(_respawnRoutine); }

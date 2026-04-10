@@ -106,14 +106,7 @@ public class PlayerMeleeCombat : MonoBehaviour
 
     private SimplePlayerHealth _playerHealth;
 
-    public static PlayerMeleeCombat Resolve(Transform t)
-    {
-        if (t == null) return null;
-        if (t.TryGetComponent(out PlayerMeleeCombat c)) return c;
-        c = t.GetComponentInParent<PlayerMeleeCombat>(true);
-        if (c != null) return c;
-        return t.GetComponentInChildren<PlayerMeleeCombat>(true);
-    }
+    public static PlayerMeleeCombat Resolve(Transform t) => TransformHierarchy.FindComponent<PlayerMeleeCombat>(t);
 
     // 피격·사망 시 공격을 즉시 중단합니다. StopAllCoroutines()는 코루틴의 finally를 호출하지 않으므로 여기서 상태를 정리합니다.
     public void InterruptAttack()
@@ -479,7 +472,7 @@ public class PlayerMeleeCombat : MonoBehaviour
 
     // 칼 충돌에서 호출해 데미지를 주는 함수입니다.
     // 핵심 요약: 같은 스윙에서 같은 적은 한 번만 맞습니다.
-    public void TryHit(IDamageable target)
+    public void TryHit(IDamageable target, Vector3 hitPoint)
     {
         // 대상이 없으면 종료합니다.
         if (target == null) return;
@@ -495,6 +488,6 @@ public class PlayerMeleeCombat : MonoBehaviour
         // 목록에 넣습니다.
         _hitInstanceIds.Add(id);
         // 데미지를 줍니다.
-        target.TakeDamage(attackDamage, gameObject);
+        target.TakeDamage(attackDamage, gameObject, hitPoint);
     }
 }

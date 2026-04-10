@@ -1,10 +1,9 @@
-// 유니티 기본 기능을 사용하기 위해 꼭 필요합니다.
-using UnityEngine;
-// 코루틴을 쓰기 위해 꼭 필요합니다.
 using System.Collections;
+using UnityEngine;
 
-// 칼 충돌 범위에서 맞은 대상에게 데미지를 주는 트리거 스크립트입니다.
-// 핵심 요약: 플레이어와 장비는 무시하고, PlayerMeleeCombat이 애니메이션 이벤트로 연 피격 창에서만 IDamageable에게 맞춥니다.
+/// <summary>
+/// 플레이어 무기 트리거. PlayerMeleeCombat의 피격 창에서만 <see cref="IDamageable"/>에게 데미지를 줍니다.
+/// </summary>
 [RequireComponent(typeof(Collider))]
 public class MeleeWeaponHitbox : MonoBehaviour
 {
@@ -88,7 +87,8 @@ public class MeleeWeaponHitbox : MonoBehaviour
 
         IDamageable damageable = other.GetComponentInParent<IDamageable>();
         if (damageable == null) return;
-        combat.TryHit(damageable);
+        Vector3 hitPoint = other.ClosestPoint(transform.position);
+        combat.TryHit(damageable, hitPoint);
     }
 
     private bool ShouldIgnore(Collider other)
