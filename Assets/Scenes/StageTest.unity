@@ -5089,7 +5089,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 35daf7120345af948947998cd8bb33f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  monsterPrefab: {fileID: 7850421165334880816, guid: 7da60b9e768aa4045aa79f590ce4147d, type: 3}
+  monsterPrefab: {fileID: 110935068829381929, guid: 982d237c0ac230044903cdcf8022887a, type: 3}
   spawnPoints:
   - {fileID: 1937509880}
   - {fileID: 186250791}
