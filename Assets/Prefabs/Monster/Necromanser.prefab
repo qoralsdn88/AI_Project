@@ -20317,6 +20317,10 @@ GameObject:
   m_Component:
   - component: {fileID: 6606516297327502453}
   - component: {fileID: 7477356789067429301}
+  - component: {fileID: 1444066228001001001}
+  - component: {fileID: 1444066228001001002}
+  - component: {fileID: 1444066228001001003}
+  - component: {fileID: -4649238990721703873}
   m_Layer: 0
   m_Name: Necromanser
   m_TagString: Untagged
@@ -20356,7 +20360,7 @@ Animator:
   m_GameObject: {fileID: 8329614609220066658}
   m_Enabled: 1
   m_Avatar: {fileID: 9000000, guid: 91f1429de22af07499ab3cf82c83112a, type: 3}
-  m_Controller: {fileID: 9100000, guid: 117a7c707833bec4fa49792fed542cce, type: 2}
+  m_Controller: {fileID: 9100000, guid: 56cebf0d0beafda41be69915e7313db0, type: 2}
   m_CullingMode: 1
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -20368,6 +20372,116 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!136 &1444066228001001001
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8329614609220066658}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.45
+  m_Height: 1.8
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.9, z: 0}
+--- !u!54 &1444066228001001002
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8329614609220066658}
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &1444066228001001003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8329614609220066658}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 887459b29eb0c824895804313e63c3be, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 10
+  autoApplyNecromancerDefaults: 1
+  necromancerMaxHealth: 500
+  necromancerHitStateName: getgit
+  necromancerDeathStateName: death
+  animator: {fileID: 7477356789067429301}
+  getHitTriggerParameter: GetHit
+  getHitStateName: getgit
+  attackBehaviour: {fileID: 0}
+  hitStopDelayAfterHitReactSeconds: 0.1
+  hitStopDuration: 0.05
+  hitStopTimeScale: 0
+  deathBoolParameter: Dead
+  deathStateName: death
+  removeAfterDeathAnimationSeconds: 3
+  deathAnimFinishedNormalizedTime: 0.98
+  deathAnimSafetyTimeout: 12
+  lockToDeathStateUntilDestroyed: 1
+--- !u!114 &-4649238990721703873
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8329614609220066658}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: edb445c449f19344d8c0ec14948e20cf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  detectRange: 16
+  chaseRange: 13
+  stopRange: 9
+  moveSpeed: 2.2
+  rotateSpeed: 10
+  summonCooldown: 20
+  projectileCooldown: 10
+  summonMonsterPrefab: {fileID: 110935068829381929, guid: 982d237c0ac230044903cdcf8022887a, type: 3}
+  skeletonSpawnCount: 2
+  summonSpread: 1.6
+  castWindupSeconds: 0.6
+  projectileSpeed: 10
+  projectileDamage: 20
+  projectileLifetime: 5
+  idleStateName: idle1
+  walkStateName: walk
+  spellcastStateName: spellcast1
+  crossFadeSeconds: 0.1
 --- !u!1 &8348151093349832041
 GameObject:
   m_ObjectHideFlags: 0

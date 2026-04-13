@@ -37,6 +37,7 @@ public class MonsterDetectChaseSimple : MonoBehaviour // 몬스터의 탐지와 
 
     public bool IsDetected { get; private set; } // 플레이어를 찾았는지 여부를 외부 스크립트가 읽을 수 있게 공개합니다. — 요약: 다른 코드는 이 값만 읽고, 바꾸기는 이 스크립트 안에서만 합니다.
     public bool IsInAttackRange { get; private set; } // 플레이어가 공격 거리 안인지 여부를 외부 스크립트가 읽을 수 있게 공개합니다. — 요약: 공격 스크립트가 이 값을 보고 근접 공격을 허용할지 판단할 수 있습니다.
+    private bool forceChaseEnabled; // 소환 직후처럼 즉시 추적을 강제할 때 사용하는 스위치입니다. — 요약: detectRange 밖이어도 chase 로직이 동작하도록 만듭니다.
     private Collider[] nearbyMonsterBuffer = new Collider[16]; // 주변 몬스터를 임시로 담아 분리 계산에 쓰는 버퍼입니다. — 요약: 매번 새 목록을 만들지 않고 같은 배열을 재사용해 찌꺼기 생성을 줄입니다.
 
     private Vector3 smoothedSeparationDirection; // 지난 프레임까지 부드럽게 이어 온 분리 방향 값을 저장합니다. — 요약: 급한 분리 방향과 이 변수를 SmoothDamp로 섞어 튀는 움직임을 줄입니다.
@@ -90,8 +91,16 @@ public class MonsterDetectChaseSimple : MonoBehaviour // 몬스터의 탐지와 
     private void UpdateDistanceState() // 거리 계산으로 현재 탐지 상태와 공격 거리 상태를 정하는 함수입니다. — 요약: 몬스터 위치와 player 위치 사이 거리로 두 불 값을 갱신합니다.
     {
         float distance = Vector3.Distance(transform.position, player.position); // 몬스터와 플레이어 사이 거리를 계산합니다. — 요약: distance는 이후 두 임계값과 비교되는 기준 값입니다.
-        IsDetected = distance <= detectRange; // 탐지 거리에 들어오면 true, 벗어나면 false가 됩니다. — 요약: detectRange는 추격을 시작하는 바깥 원의 반지름입니다.
+        IsDetected = forceChaseEnabled || distance <= detectRange; // 강제 추적이면 거리와 무관하게 탐지 상태를 유지합니다. — 요약: 소환 직후 Idle에 멈추지 않고 바로 이동하도록 보장합니다.
         IsInAttackRange = distance <= attackRange; // 공격 거리에 들어오면 true, 벗어나면 false가 됩니다. — 요약: attackRange는 더 작은 안쪽 원의 반지름입니다.
+    }
+
+    public void BeginImmediateChase(Transform target) // 외부에서 플레이어를 지정하며 즉시 추적 모드로 진입시키는 함수입니다. — 요약: 네크로맨서 소환 직후 스켈레톤이 지체 없이 추격을 시작합니다.
+    {
+        if (target == null) return; // 목표가 없으면 잘못된 호출이므로 무시합니다. — 요약: null target으로 상태가 깨지는 것을 방지합니다.
+        player = target; // 추격 대상을 즉시 연결합니다. — 요약: 프리팹에 수동 연결이 없어도 동작합니다.
+        forceChaseEnabled = true; // 강제 추적을 켭니다. — 요약: detectRange 밖에서도 추적 시작이 가능합니다.
+        IsDetected = true; // 이번 프레임부터 탐지된 상태로 처리합니다. — 요약: 소환 직후 대기 상태를 건너뜁니다.
     }
 
     private void RunChaseIfNeeded() // 추격이 필요한 조건일 때만 이동을 실행하는 함수입니다. — 요약: 멈출 때 분리 스무딩을 서서히 비워 다음 추격이 자연스럽게 합니다.

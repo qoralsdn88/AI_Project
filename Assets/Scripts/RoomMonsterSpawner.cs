@@ -41,6 +41,7 @@ public class RoomMonsterSpawner : MonoBehaviour // 방 안에서 몬스터를 �
             Quaternion spawnRotation = Quaternion.identity; // 회전은 기본값으로 두어서 예측 가능한 시작 상태를 만듭니다.
             GameObject monster = Instantiate(monsterPrefab, spawnPosition, spawnRotation); // 프리팹을 복제해서 스폰 지점에 둡니다.
             monster.name = $"{monsterPrefab.name}_Spawned_{i}"; // 생성된 오브젝트 이름을 바꿔서 확인을 쉽게 합니다.
+            TryConfigureNecromancer(monster); // 네크로맨서 프리팹이라면 필요한 전투/AI 컴포넌트를 자동으로 붙입니다.
         } // for 반복 블록의 끝 중괄호입니다.
     } // SpawnNow 블록의 끝 중괄호입니다.
     private int GetSpawnIndex(int i) // i와 spawnPoints 길이로 어떤 지점을 쓸지 정합니다.
@@ -49,4 +50,48 @@ public class RoomMonsterSpawner : MonoBehaviour // 방 안에서 몬스터를 �
         int index = i % length; // 지점 수보다 많아져도 반복해서 쓰게 나머지를 씁니다.
         return index; // 몬스터가 쓸 최종 스폰 지점 번호를 돌려줍니다.
     } // GetSpawnIndex 블록의 끝 중괄호입니다.
+
+    private void TryConfigureNecromancer(GameObject spawnedMonster)
+    {
+        if (spawnedMonster == null) return;
+
+        Animator animator = spawnedMonster.GetComponentInChildren<Animator>();
+        if (animator == null || animator.runtimeAnimatorController == null) return;
+
+        string controllerName = animator.runtimeAnimatorController.name;
+        if (string.IsNullOrEmpty(controllerName)) return;
+        bool isNecromancer =
+            controllerName.Contains("Necromanser") ||
+            controllerName.Contains("Necromancer");
+        if (!isNecromancer) return;
+
+        if (spawnedMonster.GetComponent<SimpleMonsterHealth>() == null)
+        {
+            spawnedMonster.AddComponent<SimpleMonsterHealth>();
+        }
+
+        NecromancerBossController boss = spawnedMonster.GetComponent<NecromancerBossController>();
+        if (boss == null)
+        {
+            boss = spawnedMonster.AddComponent<NecromancerBossController>();
+        }
+
+        GameObject skeletonPrefab = LoadSkeletonPrefabForSpawner();
+        if (boss != null && skeletonPrefab != null)
+        {
+            boss.InjectSkeletonPrefab(skeletonPrefab);
+        }
+    }
+
+    private static GameObject LoadSkeletonPrefabForSpawner()
+    {
+        GameObject byResources = Resources.Load<GameObject>("Monster/Skeleton");
+        if (byResources != null) return byResources;
+
+#if UNITY_EDITOR
+        return UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Monster/Skeleton.prefab");
+#else
+        return null;
+#endif
+    }
 } // RoomMonsterSpawner 클래스의 끝 중괄호입니다.

@@ -8,6 +8,11 @@ using UnityEngine;
 /// </summary>
 public class NecromancerProjectile : MonoBehaviour
 {
+    private const int DeflectSampleRate = 44100;
+    private const float DeflectDurationSeconds = 0.18f;
+    private const float DeflectVolume = 0.45f;
+
+    private static AudioClip _deflectClip;
     private GameObject _owner;
     private Vector3 _direction = Vector3.forward;
     private float _speed = 10f;
@@ -42,16 +47,22 @@ public class NecromancerProjectile : MonoBehaviour
         SimplePlayerHealth playerHealth = SimplePlayerHealth.Resolve(other.transform);
         if (playerHealth != null)
         {
+            bool blocked = PlayerShieldBlock.TryBlockHit(playerHealth.transform, _owner);
+            if (blocked)
+            {
+                PlayBlockDeflectFeedback();
+                Destroy(gameObject);
+                return;
+            }
+
             playerHealth.TakeDamage(_damage, _owner, transform.position);
             Destroy(gameObject);
             return;
         }
 
-        IDamageable damageable = other.GetComponentInParent<IDamageable>();
-        if (damageable != null)
+        if (IsMonsterCollider(other.transform))
         {
-            damageable.TakeDamage(_damage, _owner, transform.position);
-            Destroy(gameObject);
+            // 몬스터는 완전히 관통하고, 어떤 피해도 주지 않습니다.
             return;
         }
 
@@ -59,5 +70,47 @@ public class NecromancerProjectile : MonoBehaviour
         {
             Destroy(gameObject);
         }
+    }
+
+    private static bool IsMonsterCollider(Transform target)
+    {
+        if (target == null) return false;
+        if (target.GetComponentInParent<SimpleMonsterHealth>() != null) return true;
+        if (target.GetComponentInParent<MonsterDetectChaseSimple>() != null) return true;
+        return false;
+    }
+
+    private void PlayBlockDeflectFeedback()
+    {
+        HitImpactVfx.PlayAt(transform.position, _owner);
+
+        AudioClip clip = GetOrCreateDeflectClip();
+        if (clip != null)
+        {
+            AudioSource.PlayClipAtPoint(clip, transform.position, DeflectVolume);
+        }
+    }
+
+    private static AudioClip GetOrCreateDeflectClip()
+    {
+        if (_deflectClip != null) return _deflectClip;
+
+        int sampleCount = Mathf.Max(1, Mathf.CeilToInt(DeflectDurationSeconds * DeflectSampleRate));
+        float[] samples = new float[sampleCount];
+        float twoPi = Mathf.PI * 2f;
+
+        for (int i = 0; i < sampleCount; i++)
+        {
+            float t = i / (float)DeflectSampleRate;
+            float envelope = Mathf.Exp(-18f * t);
+            float toneA = Mathf.Sin(twoPi * 1300f * t);
+            float toneB = Mathf.Sin(twoPi * 2100f * t) * 0.55f;
+            float toneC = Mathf.Sin(twoPi * 3200f * t) * 0.3f;
+            samples[i] = (toneA + toneB + toneC) * envelope * 0.6f;
+        }
+
+        _deflectClip = AudioClip.Create("ShieldDeflectSynth", sampleCount, 1, DeflectSampleRate, false);
+        _deflectClip.SetData(samples, 0);
+        return _deflectClip;
     }
 }

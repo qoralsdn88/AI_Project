@@ -22,7 +22,8 @@ public class NecromancerBossController : MonoBehaviour
     [SerializeField] private float projectileCooldown = 10f;
 
     [Header("스킬 설정")]
-    [SerializeField] private GameObject skeletonPrefab;
+    [Tooltip("네크로맨서가 소환할 몬스터 프리팹입니다. 반드시 인스펙터에서 직접 할당하세요.")]
+    public GameObject summonMonsterPrefab;
     [SerializeField] private int skeletonSpawnCount = 2;
     [SerializeField] private float summonSpread = 1.6f;
     [SerializeField] private float castWindupSeconds = 0.6f;
@@ -44,10 +45,9 @@ public class NecromancerBossController : MonoBehaviour
     private bool _isCasting;
     private bool _hasSeenPlayer;
     private int _lastPlayedStateHash;
-
-    private static readonly int IdleHash = Animator.StringToHash("idle1");
-    private static readonly int WalkHash = Animator.StringToHash("walk");
-    private static readonly int SpellcastHash = Animator.StringToHash("spellcast1");
+    private int _resolvedIdleHash;
+    private int _resolvedWalkHash;
+    private int _resolvedSpellcastHash;
 
     private void Awake()
     {
@@ -58,8 +58,9 @@ public class NecromancerBossController : MonoBehaviour
     private void Start()
     {
         FindPlayerIfMissing();
-        EnsureSkeletonPrefab();
-        TryPlayState(IdleHash, idleStateName, force: true);
+        ValidateSummonPrefab();
+        ResolveAnimationStates();
+        TryPlayState(_resolvedIdleHash, force: true);
     }
 
     private void Update()
@@ -70,7 +71,7 @@ public class NecromancerBossController : MonoBehaviour
         FindPlayerIfMissing();
         if (_player == null)
         {
-            TryPlayState(IdleHash, idleStateName);
+            TryPlayState(_resolvedIdleHash);
             return;
         }
 
@@ -80,7 +81,7 @@ public class NecromancerBossController : MonoBehaviour
 
         if (distance > detectRange)
         {
-            TryPlayState(IdleHash, idleStateName);
+            TryPlayState(_resolvedIdleHash);
             return;
         }
 
@@ -101,18 +102,18 @@ public class NecromancerBossController : MonoBehaviour
         if (distance > chaseRange)
         {
             MoveToward(toPlayer.normalized);
-            TryPlayState(WalkHash, walkStateName);
+            TryPlayState(_resolvedWalkHash);
             return;
         }
 
         if (distance > stopRange)
         {
             MoveToward(toPlayer.normalized);
-            TryPlayState(WalkHash, walkStateName);
+            TryPlayState(_resolvedWalkHash);
             return;
         }
 
-        TryPlayState(IdleHash, idleStateName);
+        TryPlayState(_resolvedIdleHash);
     }
 
     private void MoveToward(Vector3 direction)
@@ -146,18 +147,25 @@ public class NecromancerBossController : MonoBehaviour
 
     private void SummonSkeletonsTowardPlayer()
     {
-        if (skeletonPrefab == null) return;
+        if (summonMonsterPrefab == null) return;
         if (_player == null) return;
 
-        Vector3 forward = transform.forward;
-        Vector3 right = transform.right;
+        Vector3 forward = _player.position - transform.position;
+        forward.y = 0f;
+        if (forward.sqrMagnitude <= 0.0001f)
+        {
+            forward = transform.forward;
+            forward.y = 0f;
+        }
+        forward.Normalize();
+        Vector3 right = Vector3.Cross(Vector3.up, forward).normalized;
 
         for (int i = 0; i < skeletonSpawnCount; i++)
         {
             float side = (i % 2 == 0) ? -1f : 1f;
             float lane = (i / 2) * 0.6f;
             Vector3 spawnPos = transform.position + forward * (1.6f + lane) + right * side * summonSpread * 0.5f;
-            GameObject spawned = Instantiate(skeletonPrefab, spawnPos, Quaternion.identity);
+            GameObject spawned = Instantiate(summonMonsterPrefab, spawnPos, Quaternion.identity);
 
             Vector3 look = _player.position - spawned.transform.position;
             look.y = 0f;
@@ -167,14 +175,14 @@ public class NecromancerBossController : MonoBehaviour
             }
 
             MonsterDetectChaseSimple chase = spawned.GetComponent<MonsterDetectChaseSimple>();
-            if (chase != null) chase.player = _player;
+            if (chase != null) chase.BeginImmediateChase(_player);
         }
     }
 
     private IEnumerator CastAndShootRoutine()
     {
         _isCasting = true;
-        TryPlayState(SpellcastHash, spellcastStateName, force: true);
+        TryPlayState(_resolvedSpellcastHash, force: true);
         yield return new WaitForSeconds(Mathf.Max(0.05f, castWindupSeconds));
 
         if (_player != null)
@@ -186,7 +194,7 @@ public class NecromancerBossController : MonoBehaviour
             SpawnProjectile(firePos, dir.normalized);
         }
 
-        TryPlayState(IdleHash, idleStateName, force: true);
+        TryPlayState(_resolvedIdleHash, force: true);
         _isCasting = false;
     }
 
@@ -211,15 +219,53 @@ public class NecromancerBossController : MonoBehaviour
         projectile.Initialize(gameObject, direction, projectileSpeed, projectileDamage, projectileLifetime);
     }
 
-    private void TryPlayState(int hash, string stateName, bool force = false)
+    private void TryPlayState(int hash, bool force = false)
     {
         if (_animator == null) return;
         if (hash == 0) return;
         if (!force && _lastPlayedStateHash == hash) return;
-        if (!_animator.HasState(0, hash)) return;
 
-        _animator.CrossFade(string.IsNullOrEmpty(stateName) ? hash : Animator.StringToHash(stateName), Mathf.Max(0.02f, crossFadeSeconds), 0, 0f);
+        _animator.CrossFade(hash, Mathf.Max(0.02f, crossFadeSeconds), 0, 0f);
         _lastPlayedStateHash = hash;
+    }
+
+    private void ResolveAnimationStates()
+    {
+        _resolvedIdleHash = ResolveStateHash(idleStateName, "idle1", "idle2");
+        _resolvedWalkHash = ResolveStateHash(walkStateName, "walk", "walk 0");
+        _resolvedSpellcastHash = ResolveStateHash(spellcastStateName, "spellcast1", "atack1", "atack2");
+    }
+
+    private int ResolveStateHash(string primaryName, params string[] fallbackNames)
+    {
+        if (_animator == null) return 0;
+
+        if (TryGetStateHash(primaryName, out int primaryHash))
+        {
+            return primaryHash;
+        }
+
+        for (int i = 0; i < fallbackNames.Length; i++)
+        {
+            if (TryGetStateHash(fallbackNames[i], out int fallbackHash))
+            {
+                return fallbackHash;
+            }
+        }
+
+        return 0;
+    }
+
+    private bool TryGetStateHash(string stateName, out int hash)
+    {
+        hash = 0;
+        if (string.IsNullOrEmpty(stateName)) return false;
+
+        int candidate = Animator.StringToHash(stateName);
+        if (!_animator.HasState(0, candidate)) return false;
+
+        hash = candidate;
+        return true;
     }
 
     private void FindPlayerIfMissing()
@@ -229,16 +275,22 @@ public class NecromancerBossController : MonoBehaviour
         if (playerObj != null) _player = playerObj.transform;
     }
 
-    private void EnsureSkeletonPrefab()
+    private void ValidateSummonPrefab()
     {
-        if (skeletonPrefab != null) return;
-        skeletonPrefab = Resources.Load<GameObject>("Monster/Skeleton");
+        if (summonMonsterPrefab != null) return;
+        Debug.LogWarning("[NecromancerBossController] summonMonsterPrefab이 비어 있어 소환 스킬이 비활성화됩니다. 네크로맨서 컴포넌트에 소환 프리팹을 직접 연결하세요.");
     }
 
-    public void InjectSkeletonPrefab(GameObject prefab)
+    public void InjectSummonMonsterPrefab(GameObject prefab)
     {
         if (prefab == null) return;
-        skeletonPrefab = prefab;
+        summonMonsterPrefab = prefab;
+    }
+
+    // 이전 메서드명을 쓰는 코드와 호환되도록 유지합니다.
+    public void InjectSkeletonPrefab(GameObject prefab)
+    {
+        InjectSummonMonsterPrefab(prefab);
     }
 }
 
@@ -251,7 +303,6 @@ public static class NecromancerBossRuntimeBootstrap
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void AttachBossControllerToNecromancers()
     {
-        GameObject skeletonPrefab = LoadSkeletonPrefabForRuntime();
         Animator[] animators = Object.FindObjectsByType<Animator>(FindObjectsSortMode.None);
         for (int i = 0; i < animators.Length; i++)
         {
@@ -260,7 +311,7 @@ public static class NecromancerBossRuntimeBootstrap
 
             string controllerName = animator.runtimeAnimatorController.name;
             if (string.IsNullOrEmpty(controllerName)) continue;
-            if (!controllerName.Contains("Necromanser")) continue;
+            if (!controllerName.Contains("Necromanser") && !controllerName.Contains("Necromancer")) continue;
 
             GameObject root = animator.transform.root.gameObject;
             if (root.GetComponent<NecromancerBossController>() == null)
@@ -269,27 +320,27 @@ public static class NecromancerBossRuntimeBootstrap
             }
 
             NecromancerBossController controller = root.GetComponent<NecromancerBossController>();
-            if (controller != null && skeletonPrefab != null)
-            {
-                controller.InjectSkeletonPrefab(skeletonPrefab);
-            }
+            if (controller != null && controller.summonMonsterPrefab == null)
+                Debug.LogWarning($"[NecromancerBossRuntimeBootstrap] {root.name}의 NecromancerBossController에 summonMonsterPrefab이 비어 있습니다.");
 
             if (root.GetComponent<SimpleMonsterHealth>() == null)
             {
                 root.AddComponent<SimpleMonsterHealth>();
             }
+
+            EnsureDamageCollider(root);
         }
     }
 
-    private static GameObject LoadSkeletonPrefabForRuntime()
+    private static void EnsureDamageCollider(GameObject root)
     {
-        GameObject byResources = Resources.Load<GameObject>("Monster/Skeleton");
-        if (byResources != null) return byResources;
+        if (root == null) return;
+        if (root.GetComponent<Collider>() != null) return;
 
-#if UNITY_EDITOR
-        return UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Monster/Skeleton.prefab");
-#else
-        return null;
-#endif
+        CapsuleCollider capsule = root.AddComponent<CapsuleCollider>();
+        capsule.isTrigger = false;
+        capsule.radius = 0.45f;
+        capsule.height = 1.8f;
+        capsule.center = new Vector3(0f, 0.9f, 0f);
     }
 }
