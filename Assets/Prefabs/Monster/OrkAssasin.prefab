@@ -7469,11 +7469,13 @@ MonoBehaviour:
   attackCooldown: 3
   attackTriggerParam: Attack
   weaponDamageWindowDuration: 0.35
+  weaponDamageWindowStartDelay: 0.5
   useAttackVariants: 1
   attackVariantTriggerParams:
   - Attack1
   - Attack2
   pickRandomVariant: 1
+  attackMoveLockDuration: 1.3
   attackHitSuppressionDuration: 0.85
 --- !u!114 &793490345260667477
 MonoBehaviour:
@@ -7490,10 +7492,26 @@ MonoBehaviour:
   player: {fileID: 0}
   animator: {fileID: 8515176627030191889}
   moveSpeed: 2.5
-  detectRange: 10
+  detectRange: 11
   attackRange: 1.8
   monsterSpacingRadius: 1.1
   monsterSpacingStrength: 1.8
+  separationSmoothTime: 0.15
+  moveFacingSmoothTime: 0.12
+  rotateSlerpSharpness: 10
+  flankPathCheckRadius: 2.8
+  flankInFrontDot: 0.28
+  flankMinForward: 0.35
+  flankCloserThanPlayerRatio: 0.94
+  flankStrength: 1.2
+  flankSmoothTime: 0.14
+  mapBlockLayerMask:
+    serializedVersion: 2
+    m_Bits: 256
+  bodyRadius: 0.35
+  bodyHeight: 1.7
+  bodyCenterY: 0.9
+  wallSkin: 0.03
   monsterLayerMask:
     serializedVersion: 2
     m_Bits: 64

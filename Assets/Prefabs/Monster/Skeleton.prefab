@@ -1,5 +1,110 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &991092110
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 991092111}
+  - component: {fileID: 991092112}
+  - component: {fileID: 991092114}
+  - component: {fileID: 991092113}
+  m_Layer: 6
+  m_Name: WeaponHitbox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &991092111
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 991092110}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: 0.048989818, w: 0.9987993}
+  m_LocalPosition: {x: -0.295, y: -0.006, z: 0.025}
+  m_LocalScale: {x: 0.9108784, y: 0.13058421, z: 0.08838336}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1512888146144245680}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 5.616}
+--- !u!65 &991092112
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 991092110}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!54 &991092114
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 991092110}
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &991092113
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 991092110}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c2f4a8e1d9b46c2a0e5f3d8712bac94, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  attackSource: {fileID: 7112601181518533952}
+  monsterRoot: {fileID: 775127625139302291}
+  hitSizeMultiplier: 3.5
+  fallbackBoxSize: {x: 0.6, y: 0.15, z: 2.2}
+  hitLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  useCharacterControllerFallback: 0
+  chaseTargetBoundsPadding: 0.2
+  verboseHitDebugLog: 1
+  blockDamageMultiplier: 0.2
 --- !u!1 &110935068829381929
 GameObject:
   m_ObjectHideFlags: 0
@@ -76,19 +181,26 @@ MonoBehaviour:
   player: {fileID: 0}
   animator: {fileID: 6638836517130794473}
   moveSpeed: 1.8
-  detectRange: 10
+  detectRange: 11
   attackRange: 1.8
   monsterSpacingRadius: 1.6
   monsterSpacingStrength: 4.15
   separationSmoothTime: 0.08
   moveFacingSmoothTime: 0.12
   rotateSlerpSharpness: 10
-  flankPathCheckRadius: 2.8
+  flankPathCheckRadius: 2.5
   flankInFrontDot: 0.28
   flankMinForward: 0.35
   flankCloserThanPlayerRatio: 0.94
   flankStrength: 1.2
   flankSmoothTime: 0.14
+  mapBlockLayerMask:
+    serializedVersion: 2
+    m_Bits: 256
+  bodyRadius: 0.35
+  bodyHeight: 1.7
+  bodyCenterY: 0.9
+  wallSkin: 0.03
   monsterLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -112,11 +224,13 @@ MonoBehaviour:
   attackCooldown: 3
   attackTriggerParam: Attack
   weaponDamageWindowDuration: 0.35
+  weaponDamageWindowStartDelay: 0.7
   useAttackVariants: 1
   attackVariantTriggerParams:
   - Attack1
   - Attack2
   pickRandomVariant: 1
+  attackMoveLockDuration: 2
   attackHitSuppressionDuration: 0.85
 --- !u!114 &4658379141310078094
 MonoBehaviour:
@@ -134,6 +248,7 @@ MonoBehaviour:
   animator: {fileID: 0}
   getHitTriggerParameter: GetHit
   attackBehaviour: {fileID: 0}
+  hitStopDelayAfterHitReactSeconds: 0.1
   hitStopDuration: 0.05
   hitStopTimeScale: 0
   deathTriggerParameter: Dead
@@ -570,6 +685,7 @@ Transform:
   m_Children:
   - {fileID: 8966155194306498270}
   - {fileID: 9182736455011122335}
+  - {fileID: 991092111}
   m_Father: {fileID: 3375493979668233680}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3085984254817094261
