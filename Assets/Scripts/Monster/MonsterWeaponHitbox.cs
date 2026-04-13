@@ -17,6 +17,10 @@ public class MonsterWeaponHitbox : MonoBehaviour
     [Header("히트 판정 범위")]
     [Tooltip("무기 메시/자식 렌더러 바운드를 기준으로 박스 크기에 곱합니다. 3~4 권장.")]
     [SerializeField] private float hitSizeMultiplier = 3.5f;
+    [Tooltip("켜면 스폰 시 렌더러 기준으로 히트박스를 다시 계산합니다. 끄면 프리팹에 저장된 박스 크기를 그대로 사용합니다.")]
+    [SerializeField] private bool autoResizeFromRenderers = true;
+    [Tooltip("히트박스 크기 계산에 사용할 렌더러 기준 루트입니다. 비워두면 부모를 사용합니다.")]
+    [SerializeField] private Transform hitBoundsProbeRoot;
     [Tooltip("바운딩 박스를 못 찾으면 이 로컬 크기(반경 아님, BoxCollider size)를 씁니다.")]
     [SerializeField] private Vector3 fallbackBoxSize = new Vector3(0.6f, 0.15f, 2.2f);
 
@@ -44,7 +48,7 @@ public class MonsterWeaponHitbox : MonoBehaviour
         if (attackSource == null) { attackSource = GetComponentInParent<MonsterAttackSimple>(true); }
         if (monsterRoot == null && attackSource != null) { monsterRoot = attackSource.transform; }
 
-        ApplyScaledHitSize();
+        if (autoResizeFromRenderers) { ApplyScaledHitSize(); }
 
         if (GetComponent<Rigidbody>() == null)
         {
@@ -55,11 +59,16 @@ public class MonsterWeaponHitbox : MonoBehaviour
 
     }
 
+    private void Start()
+    {
+        if (autoResizeFromRenderers) { ApplyScaledHitSize(); }
+    }
+
     private void ApplyScaledHitSize()
     {
         Bounds combined = new Bounds(transform.position, Vector3.zero);
         bool hasBounds = false;
-        Transform probeRoot = transform.parent != null ? transform.parent : transform;
+        Transform probeRoot = hitBoundsProbeRoot != null ? hitBoundsProbeRoot : (transform.parent != null ? transform.parent : transform);
         var renderers = probeRoot.GetComponentsInChildren<Renderer>(true);
         for (int i = 0; i < renderers.Length; i++)
         {
@@ -85,7 +94,11 @@ public class MonsterWeaponHitbox : MonoBehaviour
         else
         {
             _box.center = Vector3.zero;
-            _box.size = fallbackBoxSize * hitSizeMultiplier;
+            _box.size = Vector3.Max(fallbackBoxSize, Vector3.one * 0.05f);
+            if (verboseHitDebugLog)
+            {
+                Debug.LogWarning($"{LogTag} 렌더러 bounds를 찾지 못해 fallbackBoxSize를 그대로 사용합니다. root={(probeRoot != null ? probeRoot.name : "null")}");
+            }
         }
     }
 

@@ -28,8 +28,8 @@ Transform:
   m_GameObject: {fileID: 991092110}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: 0.048989818, w: 0.9987993}
-  m_LocalPosition: {x: -0.295, y: -0.006, z: 0.025}
-  m_LocalScale: {x: 0.9108784, y: 0.13058421, z: 0.08838336}
+  m_LocalPosition: {x: -0.507, y: -0.027, z: 0.081}
+  m_LocalScale: {x: 1.81, y: 1, z: 0.74}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1512888146144245680}
@@ -97,7 +97,9 @@ MonoBehaviour:
   attackSource: {fileID: 7112601181518533952}
   monsterRoot: {fileID: 775127625139302291}
   hitSizeMultiplier: 3.5
-  fallbackBoxSize: {x: 0.6, y: 0.15, z: 2.2}
+  autoResizeFromRenderers: 0
+  hitBoundsProbeRoot: {fileID: 9182736455011122335}
+  fallbackBoxSize: {x: 1.1, y: 0.8, z: 1.9}
   hitLayers:
     serializedVersion: 2
     m_Bits: 4294967295
