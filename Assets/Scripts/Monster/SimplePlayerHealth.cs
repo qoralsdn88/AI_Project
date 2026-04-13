@@ -23,6 +23,8 @@ public class SimplePlayerHealth : MonoBehaviour
 
     [Header("피격·사망 타이밍")]
     [SerializeField] private float hitStunDuration = 0.5f;
+    [Tooltip("피격이 적용된 뒤 이 시간 동안은 추가 피격을 무시합니다.")]
+    [SerializeField, Min(0f)] private float hitInvulnerabilitySeconds = 1f;
     [SerializeField] private float respawnDelaySeconds = 5f;
     [SerializeField] private float hitCrossFadeDuration = 0.1f;
     [Tooltip("피격(또는 사망) 애니가 재생된 뒤, 이 시간(실시간 초) 후에 히트 스탑이 걸립니다.")]
@@ -46,6 +48,7 @@ public class SimplePlayerHealth : MonoBehaviour
     private Vector3 _spawnPosition;
     private Quaternion _spawnRotation;
     private float _actionLockUntilTime;
+    private float _nextDamageAllowedTime;
     private bool _isDead;
     private Coroutine _respawnRoutine;
 
@@ -85,6 +88,7 @@ public class SimplePlayerHealth : MonoBehaviour
     public void TakeDamage(int damage, GameObject attacker, Vector3 hitPoint)
     {
         if (_isDead) return;
+        if (Time.time < _nextDamageAllowedTime) return;
 
         int previousHp = currentHp;
         int applied = Mathf.Max(0, damage);
@@ -95,6 +99,10 @@ public class SimplePlayerHealth : MonoBehaviour
         }
 
         currentHp = Mathf.Max(0, currentHp - applied);
+        if (applied > 0)
+        {
+            _nextDamageAllowedTime = Time.time + hitInvulnerabilitySeconds;
+        }
         float hitStopLen = applied > 0 ? (hitStopDuration > 0f ? hitStopDuration : 0.05f) : 0f;
 
         Debug.Log(
@@ -271,6 +279,7 @@ public class SimplePlayerHealth : MonoBehaviour
         currentHp = maxHp;
         _isDead = false;
         _actionLockUntilTime = 0f;
+        _nextDamageAllowedTime = 0f;
 
         if (animator != null)
         {

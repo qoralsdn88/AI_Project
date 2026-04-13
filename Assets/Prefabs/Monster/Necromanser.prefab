@@ -2061,6 +2061,59 @@ SkinnedMeshRenderer:
     m_Center: {x: -0.0039568134, y: -0.39706078, z: 0.0124984}
     m_Extent: {x: 0.042749386, y: 0.40378436, z: 0.024529949}
   m_DirtyAABB: 0
+--- !u!1 &910000000000000001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 910000000000000002}
+  - component: {fileID: 910000000000000003}
+  m_Layer: 0
+  m_Name: WeaponHitbox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &910000000000000002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 910000000000000001}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.4566669, y: 0.36841807, z: -0.7081406, w: -0.39275992}
+  m_LocalPosition: {x: 0.359, y: 0.205, z: 0.015}
+  m_LocalScale: {x: 0.8295112, y: 2.0662775, z: 1.3089}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1699669247922006006}
+  m_LocalEulerAnglesHint: {x: 118.297, y: -131.07199, z: -27.619995}
+--- !u!65 &910000000000000003
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 910000000000000001}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.55, y: 0.7, z: 1.55}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &935049338957897253
 GameObject:
   m_ObjectHideFlags: 0
@@ -3346,13 +3399,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1452940742393455466}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.14809808, y: 0.7371797, z: 0.026065206, w: 0.6587516}
-  m_LocalPosition: {x: 1.3248612, y: -0.13136122, z: 0.12651527}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: -0.29973722, y: 0.57443255, z: 0.6664435, w: 0.3688332}
+  m_LocalPosition: {x: 1.051, y: 0.476, z: -0.252}
+  m_LocalScale: {x: 2.1689, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8228757326088203614}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -80.666, y: 8.59, z: 114.78}
 --- !u!137 &7305947484011125234
 SkinnedMeshRenderer:
   m_ObjectHideFlags: 0
@@ -3892,6 +3945,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4857044769277402038}
+  - {fileID: 910000000000000002}
   m_Father: {fileID: 59804961201895769}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1673082974650581235
@@ -20452,6 +20506,7 @@ MonoBehaviour:
   deathAnimFinishedNormalizedTime: 0.98
   deathAnimSafetyTimeout: 12
   lockToDeathStateUntilDestroyed: 1
+  deathReapplyIntervalSeconds: 0.2
 --- !u!114 &-4649238990721703873
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20471,13 +20526,20 @@ MonoBehaviour:
   rotateSpeed: 10
   summonCooldown: 20
   projectileCooldown: 10
-  summonMonsterPrefab: {fileID: 110935068829381929, guid: 982d237c0ac230044903cdcf8022887a, type: 3}
+  summonMonsterPrefab: {fileID: 0}
   skeletonSpawnCount: 2
   summonSpread: 1.6
   castWindupSeconds: 0.6
   projectileSpeed: 10
   projectileDamage: 20
   projectileLifetime: 5
+  meleeRange: 2.4
+  meleeCooldown: 2.2
+  meleeDamage: 18
+  meleeAttack1Trigger: Attack1
+  meleeAttack2Trigger: Attack2
+  meleeStateName1: atack1
+  meleeStateName2: atack2
   idleStateName: idle1
   walkStateName: walk
   spellcastStateName: spellcast1

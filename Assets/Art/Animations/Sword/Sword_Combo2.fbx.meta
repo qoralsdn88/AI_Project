@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: e6f8e31908baada4688fcaf010b87deb
 ModelImporter:
-  serializedVersion: 21300
+  serializedVersion: 22200
   internalIDToNameTable: []
   externalObjects: {}
   materials:
@@ -16,8 +16,6 @@ ModelImporter:
     optimizeGameObjects: 0
     removeConstantScaleCurves: 1
     motionNodeName: <Root Transform>
-    rigImportErrors: 
-    rigImportWarnings: 
     animationImportErrors: 
     animationImportWarnings: 
     animationRetargetingWarnings: 
@@ -37,7 +35,7 @@ ModelImporter:
       takeName: mixamo.com
       internalID: -203655887218126122
       firstFrame: 0
-      lastFrame: 95
+      lastFrame: 67
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -57,45 +55,45 @@ ModelImporter:
       bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
       curves: []
       events:
-      - time: 0.08272506
-        functionName: Begin_Combo
-        data: 
-        objectReferenceParameter: {fileID: 11500000, guid: 8cacf75a4cbfa304eb49d56055af6635, type: 3}
-        floatParameter: 0
-        intParameter: 0
-        messageOptions: 0
-      - time: 0.25060827
-        functionName: End_Combo
-        data: 
-        objectReferenceParameter: {fileID: 11500000, guid: 8cacf75a4cbfa304eb49d56055af6635, type: 3}
-        floatParameter: 0
-        intParameter: 0
-        messageOptions: 0
-      - time: 0.4202394
-        functionName: Begin_DoAction
-        data: 
-        objectReferenceParameter: {fileID: 11500000, guid: 8cacf75a4cbfa304eb49d56055af6635, type: 3}
-        floatParameter: 0
-        intParameter: 0
-        messageOptions: 0
-      - time: 0.97851706
-        functionName: End_DoAction
-        data: 
-        objectReferenceParameter: {fileID: 11500000, guid: 8cacf75a4cbfa304eb49d56055af6635, type: 3}
-        floatParameter: 0
-        intParameter: 0
-        messageOptions: 0
-      - time: 0.29440388
+      - time: 0.39440387
         functionName: Begin_Collision
         data: 
-        objectReferenceParameter: {fileID: 11500000, guid: 8cacf75a4cbfa304eb49d56055af6635, type: 3}
+        objectReferenceParameter: {instanceID: 0}
         floatParameter: 0
         intParameter: 0
         messageOptions: 0
-      - time: 0.39902675
+      - time: 0.6370267
         functionName: End_Collision
         data: 
-        objectReferenceParameter: {fileID: 11500000, guid: 8cacf75a4cbfa304eb49d56055af6635, type: 3}
+        objectReferenceParameter: {instanceID: 0}
+        floatParameter: 0
+        intParameter: 0
+        messageOptions: 0
+      - time: 0.6522394
+        functionName: Begin_DoAction
+        data: 
+        objectReferenceParameter: {instanceID: 0}
+        floatParameter: 0
+        intParameter: 0
+        messageOptions: 0
+      - time: 0.93272513
+        functionName: Begin_Combo
+        data: 
+        objectReferenceParameter: {instanceID: 0}
+        floatParameter: 0
+        intParameter: 0
+        messageOptions: 0
+      - time: 0.98260826
+        functionName: End_Combo
+        data: 
+        objectReferenceParameter: {instanceID: 0}
+        floatParameter: 0
+        intParameter: 0
+        messageOptions: 0
+      - time: 1
+        functionName: End_DoAction
+        data: 
+        objectReferenceParameter: {instanceID: 0}
         floatParameter: 0
         intParameter: 0
         messageOptions: 0
@@ -111,6 +109,7 @@ ModelImporter:
     addColliders: 0
     useSRGBMaterialColor: 1
     sortHierarchyByName: 1
+    importPhysicalCameras: 1
     importVisibility: 1
     importBlendShapes: 1
     importCameras: 1
@@ -138,6 +137,7 @@ ModelImporter:
     secondaryUVMinObjectScale: 1
     secondaryUVPackMargin: 4
     useFileScale: 1
+    strictVertexDataChecks: 0
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0
@@ -926,6 +926,7 @@ ModelImporter:
   humanoidOversampling: 1
   avatarSetup: 2
   addHumanoidExtraRootOnlyWhenUsingAvatar: 1
+  importBlendShapeDeformPercent: 0
   remapMaterialsIfMaterialImportModeIsNone: 0
   additionalBone: 0
   userData: 

@@ -30,6 +30,14 @@ public class NecromancerBossController : MonoBehaviour
     [SerializeField] private float projectileSpeed = 10f;
     [SerializeField] private int projectileDamage = 20;
     [SerializeField] private float projectileLifetime = 5f;
+    [Header("근접 공격 설정")]
+    [SerializeField] private float meleeRange = 2.4f;
+    [SerializeField] private float meleeCooldown = 2.2f;
+    [SerializeField] private int meleeDamage = 18;
+    [SerializeField] private string meleeAttack1Trigger = "Attack1";
+    [SerializeField] private string meleeAttack2Trigger = "Attack2";
+    [SerializeField] private string meleeStateName1 = "atack1";
+    [SerializeField] private string meleeStateName2 = "atack2";
 
     [Header("애니메이션 상태 이름")]
     [SerializeField] private string idleStateName = "idle1";
@@ -48,6 +56,14 @@ public class NecromancerBossController : MonoBehaviour
     private int _resolvedIdleHash;
     private int _resolvedWalkHash;
     private int _resolvedSpellcastHash;
+    private int _resolvedMeleeState1Hash;
+    private int _resolvedMeleeState2Hash;
+    private float _nextMeleeTime;
+    private bool _isMeleeAttacking;
+    private Collider _weaponHitbox;
+    private NecromancerWeaponHitboxDamage _weaponHitboxDamage;
+
+    public bool IsMeleeAttacking => _isMeleeAttacking;
 
     private void Awake()
     {
@@ -60,6 +76,8 @@ public class NecromancerBossController : MonoBehaviour
         FindPlayerIfMissing();
         ValidateSummonPrefab();
         ResolveAnimationStates();
+        FindWeaponHitbox();
+        SetWeaponHitboxActive(false);
         TryPlayState(_resolvedIdleHash, force: true);
     }
 
@@ -93,6 +111,12 @@ public class NecromancerBossController : MonoBehaviour
         }
 
         FacePlayer(toPlayer);
+        if (TryStartMeleeAttack(distance)) return;
+        if (_isMeleeAttacking)
+        {
+            UpdateMeleeAttackState();
+            return;
+        }
         HandleMovement(distance, toPlayer);
         TryCastSkills();
     }
@@ -182,6 +206,7 @@ public class NecromancerBossController : MonoBehaviour
     private IEnumerator CastAndShootRoutine()
     {
         _isCasting = true;
+        SetWeaponHitboxActive(false);
         TryPlayState(_resolvedSpellcastHash, force: true);
         yield return new WaitForSeconds(Mathf.Max(0.05f, castWindupSeconds));
 
@@ -234,6 +259,8 @@ public class NecromancerBossController : MonoBehaviour
         _resolvedIdleHash = ResolveStateHash(idleStateName, "idle1", "idle2");
         _resolvedWalkHash = ResolveStateHash(walkStateName, "walk", "walk 0");
         _resolvedSpellcastHash = ResolveStateHash(spellcastStateName, "spellcast1", "atack1", "atack2");
+        _resolvedMeleeState1Hash = ResolveStateHash(meleeStateName1, "atack1");
+        _resolvedMeleeState2Hash = ResolveStateHash(meleeStateName2, "atack2");
     }
 
     private int ResolveStateHash(string primaryName, params string[] fallbackNames)
@@ -292,6 +319,127 @@ public class NecromancerBossController : MonoBehaviour
     {
         InjectSummonMonsterPrefab(prefab);
     }
+
+    private bool TryStartMeleeAttack(float distance)
+    {
+        if (_isCasting) return false;
+        if (_isMeleeAttacking) return false;
+        if (distance > meleeRange) return false;
+        if (Time.time < _nextMeleeTime) return false;
+        if (_animator == null) return false;
+
+        bool playAttack1 = Random.value < 0.5f;
+        string trigger = playAttack1 ? meleeAttack1Trigger : meleeAttack2Trigger;
+        if (string.IsNullOrEmpty(trigger)) return false;
+        if (!HasTrigger(trigger)) return false;
+
+        _animator.SetTrigger(trigger);
+        _isMeleeAttacking = true;
+        _nextMeleeTime = Time.time + Mathf.Max(0.2f, meleeCooldown);
+        SetWeaponHitboxActive(true);
+        return true;
+    }
+
+    private void UpdateMeleeAttackState()
+    {
+        if (_animator == null)
+        {
+            EndMeleeAttack();
+            return;
+        }
+
+        AnimatorStateInfo stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
+        bool inAttack1 = _resolvedMeleeState1Hash != 0 && stateInfo.shortNameHash == _resolvedMeleeState1Hash;
+        bool inAttack2 = _resolvedMeleeState2Hash != 0 && stateInfo.shortNameHash == _resolvedMeleeState2Hash;
+        if (inAttack1 || inAttack2) return;
+
+        EndMeleeAttack();
+    }
+
+    private void EndMeleeAttack()
+    {
+        _isMeleeAttacking = false;
+        SetWeaponHitboxActive(false);
+    }
+
+    private void SetWeaponHitboxActive(bool active)
+    {
+        if (_weaponHitbox == null) return;
+        _weaponHitbox.enabled = active;
+    }
+
+    private void FindWeaponHitbox()
+    {
+        if (_weaponHitbox != null) return;
+
+        Collider[] childColliders = GetComponentsInChildren<Collider>(true);
+        for (int i = 0; i < childColliders.Length; i++)
+        {
+            Collider candidate = childColliders[i];
+            if (candidate == null) continue;
+            if (candidate.transform == transform) continue;
+            if (!candidate.name.Contains("WeaponHitbox")) continue;
+
+            _weaponHitbox = candidate;
+            break;
+        }
+
+        if (_weaponHitbox == null)
+        {
+            for (int i = 0; i < childColliders.Length; i++)
+            {
+                Collider candidate = childColliders[i];
+                if (candidate == null) continue;
+                if (candidate.transform == transform) continue;
+                if (!candidate.name.Contains("Weapon")) continue;
+
+                _weaponHitbox = candidate;
+                break;
+            }
+        }
+
+        AttachWeaponHitboxDamage(_weaponHitbox);
+    }
+
+    private void AttachWeaponHitboxDamage(Collider hitbox)
+    {
+        if (hitbox == null) return;
+
+        _weaponHitboxDamage = hitbox.GetComponent<NecromancerWeaponHitboxDamage>();
+        if (_weaponHitboxDamage == null)
+        {
+            _weaponHitboxDamage = hitbox.gameObject.AddComponent<NecromancerWeaponHitboxDamage>();
+        }
+
+        _weaponHitboxDamage.Initialize(this);
+    }
+
+    private Transform FindDeepChildByName(Transform root, string targetName)
+    {
+        if (root == null) return null;
+        if (root.name == targetName) return root;
+        for (int i = 0; i < root.childCount; i++)
+        {
+            Transform found = FindDeepChildByName(root.GetChild(i), targetName);
+            if (found != null) return found;
+        }
+        return null;
+    }
+
+    private bool HasTrigger(string triggerName)
+    {
+        if (_animator == null || string.IsNullOrEmpty(triggerName)) return false;
+        AnimatorControllerParameter[] parameters = _animator.parameters;
+        for (int i = 0; i < parameters.Length; i++)
+        {
+            if (parameters[i].type != AnimatorControllerParameterType.Trigger) continue;
+            if (parameters[i].name != triggerName) continue;
+            return true;
+        }
+        return false;
+    }
+
+    // 근접 무기 타격은 WeaponHitbox의 NecromancerWeaponHitboxDamage에서 처리합니다.
 }
 
 /// <summary>
