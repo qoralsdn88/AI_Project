@@ -24,6 +24,13 @@ public class MonsterDetectChaseSimple : MonoBehaviour // 몬스터의 탐지와 
     public float flankStrength = 1.2f; // 옆으로 도는 방향을 섞을 때 세기입니다. — 요약: chaseDirection과 같은 방식으로 더해지며 숫자가 클수록 옆걸음 비중이 커집니다.
     public float flankSmoothTime = 0.14f; // 옆돌기 방향이 바뀔 때 부드럽게 만드는 시간입니다. — 요약: separationSmoothTime과 비슷하게 급한 좌우 전환을 줄입니다.
 
+    [Header("맵 관통 방지 설정")] // 벽이나 장애물을 뚫고 지나가지 않게 하는 설정입니다. — 요약: 이동 전에 캡슐 모양으로 다음 위치 겹침을 검사합니다.
+    public LayerMask mapBlockLayerMask = ~0; // 벽 판정에 사용할 레이어 마스크입니다. — 요약: 벽/장애물 레이어만 켜 두면 몬스터가 맵을 관통하지 않습니다.
+    public float bodyRadius = 0.35f; // 몬스터 몸 반지름입니다. — 요약: 이 반지름이 클수록 벽을 더 일찍 감지합니다.
+    public float bodyHeight = 1.7f; // 몬스터 몸 높이입니다. — 요약: 캡슐의 위아래 점 계산에 같이 쓰입니다.
+    public float bodyCenterY = 0.9f; // 몬스터 몸 중심 높이입니다. — 요약: transform.position 기준으로 캡슐이 어느 높이에 있는지 맞춥니다.
+    public float wallSkin = 0.03f; // 벽과 아주 살짝 떨어지게 유지하는 간격입니다. — 요약: 0보다 약간 크게 두면 벽 떨림이 줄어듭니다.
+
     public LayerMask monsterLayerMask = ~0; // 겹침 검사에 사용할 레이어 마스크입니다. — 요약: 이 마스크에 포함된 콜라이더만 "다른 몬스터 후보"로 셉니다.
     public string moveSpeedParam = "MoveSpeed"; // 이동 속도를 전달할 애니메이터 float 파라미터 이름입니다. — 요약: Animator 안에 같은 이름의 숫자 파라미터가 있어야 속도가 전달됩니다.
     public string isMovingParam = "IsMoving"; // 이동 중인지 전달할 애니메이터 bool 파라미터 이름입니다. — 요약: Animator 안에 같은 이름의 참거짓 파라미터가 있어야 걷기 전환이 됩니다.
@@ -38,17 +45,22 @@ public class MonsterDetectChaseSimple : MonoBehaviour // 몬스터의 탐지와 
     private Vector3 facingSmoothVelocity; // 바라보기 방향을 부드럽게 할 때 SmoothDamp가 쓰는 내부 보조 벡터입니다. — 요약: separationSmoothVelocity와 따로 두어 서로 덮어쓰지 않게 합니다.
     private Vector3 smoothedFlankDirection; // 옆돌기 방향을 프레임마다 부드럽게 이어 저장하는 벡터입니다. — 요약: 급한 옆돌기 목표를 SmoothDamp로 담아 몸이 흔들리지 않게 합니다.
     private Vector3 flankSmoothVelocity; // 옆돌기 SmoothDamp 전용 내부 보조 벡터 ref입니다. — 요약: 분리·바라보기 보조 벡터와 섞이면 안 되므로 따로 둡니다.
+    private CapsuleCollider cachedCapsule; // 같은 오브젝트의 캡슐 콜라이더를 캐시하는 변수입니다. — 요약: 있으면 몸 반지름/높이를 자동으로 맞추는 데 사용합니다.
+    private MonsterAttackSimple cachedAttack; // 같은 오브젝트의 공격 스크립트를 캐시하는 변수입니다. — 요약: 공격 중 고정 상태를 빠르게 읽기 위해 저장해 둡니다.
 
     void Start() // 게임 시작 시 한 번 실행되는 준비 함수입니다. — 요약: 씬이 켜진 뒤 플레이어와 애니메이터 참조를 자동으로 채 웁니다.
     {
         FindPlayerIfMissing(); // player가 비어 있으면 태그로 플ей어를 찾아 연결합니다. — 요약: 인스펙터에서 비워 두어도 Player 태그 오브젝트를 찾아 채 웁니다.
         FindAnimatorIfMissing(); // animator가 비어 있으면 같은 오브젝트에서 자동으로 찾아 연결합니다. — 요약: 자식에 Animator가 있어도 GetComponentInChildren으로 잡습니다.
+        SetupBodyFromCapsuleColliderIfExists(); // 캡슐 콜라이더가 있으면 몸 크기 값을 자동 반영합니다. — 요약: 프리팹마다 수치를 손으로 다시 넣는 작업을 줄입니다.
+        FindAttackIfMissing(); // 공격 스크립트를 찾아 캐시합니다. — 요약: 공격 중에는 이동을 멈추기 위해 참조를 확보합니다.
     }
 
     void Update() // 매 프레임마다 실행되며 탐지와 추격을 반복합니다. — 요약: 매 프레임 거리를 보고 이동할지 멈출지를 다시 결정합니다.
     {
         FindPlayerIfMissing(); // 플레이어 연결이 비어 있을 때 다시 찾아 연결합니다. — 요약: 씬 전환 등으로 참조가 끊기면 다시 찾아 안전하게 유지합니다.
         FindAnimatorIfMissing(); // 애니메이터 연결이 비어 있을 때 다시 찾아 연결합니다. — 요약: 런타임에 Animator가 붙는 경우를 대비한 재시도입니다.
+        FindAttackIfMissing(); // 공격 스크립트 연결이 비어 있으면 다시 찾습니다. — 요약: 런타임에 컴포넌트가 붙어도 놓치지 않게 합니다.
         if (player == null) return; // 플레이어를 못 찾은 상태면 아무 행동도 하지 않고 종료합니다. — 요약: player가 없으면 아래 계산은 모두 건너뜁니다.
 
         UpdateDistanceState(); // 플레이어와의 거리로 탐지 상태와 공격 거리 상태를 갱신합니다. — 요약: IsDetected와 IsInAttackRange를 한 번에 갱신합니다.
@@ -67,6 +79,12 @@ public class MonsterDetectChaseSimple : MonoBehaviour // 몬스터의 탐지와 
     {
         if (animator != null) return; // 이미 연결되어 있으면 다시 찾지 않고 종료합니다. — 요약: 인스펙터에서 연결했다면 그대로 존중합니다.
         animator = GetComponentInChildren<Animator>(); // 자식 오브젝트까지 포함해서 애니메이터를 찾아 저장합니다. — 요약: 모델 루트와 분리된 Animator 위치에 대응합니다.
+    }
+
+    private void FindAttackIfMissing() // cachedAttack 변수가 비어 있을 때만 공격 스크립트를 찾아 넣는 함수입니다. — 요약: 공격 상태를 읽기 위한 참조를 자동으로 준비합니다.
+    {
+        if (cachedAttack != null) return; // 이미 연결되어 있으면 다시 찾지 않고 종료합니다. — 요약: 매 프레임 탐색 비용을 줄입니다.
+        cachedAttack = GetComponent<MonsterAttackSimple>(); // 같은 오브젝트에서 공격 스크립트를 찾아 저장합니다. — 요약: 추격과 공격이 같은 루트에 붙어 있다는 현재 구조를 사용합니다.
     }
 
     private void UpdateDistanceState() // 거리 계산으로 현재 탐지 상태와 공격 거리 상태를 정하는 함수입니다. — 요약: 몬스터 위치와 player 위치 사이 거리로 두 불 값을 갱신합니다.
@@ -90,6 +108,13 @@ public class MonsterDetectChaseSimple : MonoBehaviour // 몬스터의 탐지와 
             ResetSeparationWhenIdle(); // 공격 자세 중에는 옆으로 비키는 값이 남지 않게 비웁니다. — 요약: 공격 스크립트가 제자리 행동을 할 때 믹스 방향 잔상을 줄입니다.
             SetMoveAnimation(false, 0f); // 이동을 멈췄다는 애니메이션 상태로 바꿉니다. — 요약: 공격 거리에서는 걷기보다 공격 애니가 우선이어야 합니다.
             return; // 공격 스크립트가 처리하도록 이동하지 않고 종료합니다. — 요약: transform.position은 이 함수에서 더 이상 바꾸지 않습니다.
+        }
+
+        if (cachedAttack != null && cachedAttack.IsAttackMoveLocked) // 공격 모션 고정 시간이 남아 있으면
+        {
+            ResetSeparationWhenIdle(); // 이동 보조 방향들을 0으로 천천히 돌립니다. — 요약: 제자리 공격 중 잔여 이동 벡터가 남지 않게 합니다.
+            SetMoveAnimation(false, 0f); // 이동 애니메이션을 끕니다. — 요약: 공격 중 제자리 상태를 애니메이터에 명확히 전달합니다.
+            return; // 이동을 실행하지 않고 종료합니다. — 요약: 공격 중에는 추격 이동이 완전히 멈춥니다.
         }
 
         ChasePlayer(); // 플레이어 방향으로 이동을 실행합니다. — 요약: 추격, 분리, 스무딩, 회전을 한 흐름에서 처리합니다.
@@ -122,9 +147,72 @@ public class MonsterDetectChaseSimple : MonoBehaviour // 몬스터의 탐지와 
         if (mixedDirection.sqrMagnitude <= 0.0001f) mixedDirection = chaseDirection; // 섞은 결과가 너무 작으면 기본 추격 방향을 사용합니다. — 요약: 완전히 0에 가까우면 플레이어 방향으로 되돌립니다.
 
         Vector3 moveDirection = mixedDirection.normalized; // 최종 이동 방향 길이를 1로 맞춰 속도 계산을 일정하게 만듭니다. — 요약: moveSpeed는 이 단위 방향에만 곱해집니다.
-        transform.position += moveDirection * moveSpeed * Time.deltaTime; // 현재 위치에 이동량을 더해 몬스터를 전진시킵니다. — 요약: 물리 강체 없이 매 프레임 위치를 직접 옮깁니다.
+        float moveDistance = moveSpeed * Time.deltaTime; // 이번 프레임 이동할 실제 거리입니다. — 요약: 속도와 프레임 시간 곱으로 이동 길이를 만듭니다.
+        TryMoveWithMapCollision(moveDirection, moveDistance); // 벽 겹침을 검사하면서 가능한 만큼 이동합니다. — 요약: 직진이 막히면 축 슬라이드로 우회해 벽 관통을 막습니다.
         FaceDirectionSmooth(chaseDirection); // 몸은 플레이어 쪽으로만 천천히 돌립니다. — 요약: 회전은 옆 피하기 벡터와 분리해 몸이 좌우로 떨리지 않게 합니다.
         SetMoveAnimation(true, moveSpeed); // 이동 중 애니메이션을 켜고 현재 이동 속도를 전달합니다. — 요약: 애니메이션은 실제 이동 속도 moveSpeed와 동기됩니다.
+    }
+
+    private void SetupBodyFromCapsuleColliderIfExists() // 캡슐 콜라이더가 있으면 몸 크기 설정을 자동으로 맞추는 함수입니다. — 요약: collider 반경/높이/중심값을 이 스크립트 변수에 복사합니다.
+    {
+        cachedCapsule = GetComponent<CapsuleCollider>(); // 루트 오브젝트의 캡슐 콜라이더를 찾습니다. — 요약: 없으면 수동 입력값(bodyRadius/bodyHeight/bodyCenterY)을 그대로 사용합니다.
+        if (cachedCapsule == null) return; // 캡슐이 없으면 자동 반영을 건너뜁니다. — 요약: null 접근 오류를 막습니다.
+
+        bodyRadius = Mathf.Max(0.05f, cachedCapsule.radius * Mathf.Max(Mathf.Abs(transform.lossyScale.x), Mathf.Abs(transform.lossyScale.z))); // 월드 스케일을 반영한 반지름으로 맞춥니다. — 요약: 스케일이 커진 프리팹도 벽 감지가 작아지지 않게 합니다.
+        bodyHeight = Mathf.Max(bodyRadius * 2f + 0.05f, cachedCapsule.height * Mathf.Abs(transform.lossyScale.y)); // 최소한 지름보다 큰 높이가 되게 보정합니다. — 요약: 캡슐 위아래 점이 뒤집히지 않게 합니다.
+        bodyCenterY = cachedCapsule.center.y * Mathf.Abs(transform.lossyScale.y); // 캡슐 중심 높이를 월드 기준으로 변환합니다. — 요약: 몸통 충돌 높이를 모델에 맞춰 유지합니다.
+    }
+
+    private void TryMoveWithMapCollision(Vector3 moveDirection, float moveDistance) // 벽 관통을 막으면서 이동하는 함수입니다. — 요약: 목표 위치가 막히면 X/Z 축 슬라이드로 대체 이동을 시도합니다.
+    {
+        if (moveDistance <= 0.00001f) return; // 이동 거리가 너무 작으면 계산을 건너뜁니다. — 요약: 미세 이동에서 불필요한 물리 검사를 줄입니다.
+
+        Vector3 fullDelta = moveDirection * moveDistance; // 원래 가고 싶은 이동 벡터입니다. — 요약: 직진 시도는 이 벡터 하나로 표현합니다.
+        Vector3 targetPosition = transform.position + fullDelta; // 직진 시도의 목표 위치입니다. — 요약: 먼저 이 위치가 막히는지 검사합니다.
+        if (!IsMapBlockedAtPosition(targetPosition)) // 목표 위치가 벽과 겹치지 않으면
+        {
+            transform.position = targetPosition; // 그대로 직진 이동합니다. — 요약: 빈 공간에서는 기존과 같은 감각으로 이동합니다.
+            return; // 이동 처리 종료입니다. — 요약: 직진 성공 시 슬라이드 계산은 하지 않습니다.
+        }
+
+        Vector3 slideDeltaX = new Vector3(fullDelta.x, 0f, 0f); // X축으로만 이동하는 후보 벡터입니다. — 요약: 코너에서 한 축만 열려 있어도 앞으로 진행할 수 있게 합니다.
+        Vector3 slideDeltaZ = new Vector3(0f, 0f, fullDelta.z); // Z축으로만 이동하는 후보 벡터입니다. — 요약: X가 막혀도 Z만 열리면 미끄러지듯 이동합니다.
+
+        bool canSlideX = slideDeltaX.sqrMagnitude > 0.0000001f && !IsMapBlockedAtPosition(transform.position + slideDeltaX); // X축 후보가 실제로 이동 가능인지 검사합니다. — 요약: 막혀 있지 않으면 true가 됩니다.
+        bool canSlideZ = slideDeltaZ.sqrMagnitude > 0.0000001f && !IsMapBlockedAtPosition(transform.position + slideDeltaZ); // Z축 후보가 실제로 이동 가능인지 검사합니다. — 요약: 막혀 있지 않으면 true가 됩니다.
+
+        if (canSlideX && canSlideZ) // 두 축 모두 가능하면
+        {
+            if (slideDeltaX.sqrMagnitude >= slideDeltaZ.sqrMagnitude) transform.position += slideDeltaX; // 더 큰 축부터 적용해 직진 감각을 최대한 유지합니다. — 요약: 이동량이 더 큰 쪽을 우선 선택합니다.
+            else transform.position += slideDeltaZ; // Z가 더 크면 Z축 이동을 적용합니다. — 요약: 코너에서 덜 답답한 방향으로 흐르도록 합니다.
+            return; // 한 번 이동했으니 종료합니다. — 요약: 같은 프레임에 두 축을 모두 넣어 과속되지 않게 합니다.
+        }
+
+        if (canSlideX) // X축만 가능하면
+        {
+            transform.position += slideDeltaX; // X축으로만 슬라이드 이동합니다. — 요약: 벽을 따라 옆으로 미끄러지며 진행합니다.
+            return; // 이동 후 종료합니다. — 요약: Z축은 막혀 있으므로 시도하지 않습니다.
+        }
+
+        if (canSlideZ) // Z축만 가능하면
+        {
+            transform.position += slideDeltaZ; // Z축으로만 슬라이드 이동합니다. — 요약: 벽을 따라 앞/뒤 방향으로 미끄러지며 진행합니다.
+            return; // 이동 후 종료합니다. — 요약: X축은 막혀 있으므로 시도하지 않습니다.
+        }
+    }
+
+    private bool IsMapBlockedAtPosition(Vector3 targetPosition) // 주어진 위치에 몸 캡슐을 놓았을 때 벽과 겹치는지 검사하는 함수입니다. — 요약: 겹치면 true(막힘), 아니면 false(이동 가능)입니다.
+    {
+        float radius = Mathf.Max(0.05f, bodyRadius); // 반지름 최소값을 보장합니다. — 요약: 0에 가까운 반지름으로 검사 누락이 생기지 않게 합니다.
+        float height = Mathf.Max(radius * 2f + 0.05f, bodyHeight); // 높이 최소값을 보장합니다. — 요약: 캡슐 계산이 뒤집히지 않도록 합니다.
+        float halfLine = Mathf.Max(0.001f, (height * 0.5f) - radius); // 캡슐 중앙선 반길이를 계산합니다. — 요약: 위아래 구의 중심 간격을 만들기 위한 값입니다.
+
+        Vector3 center = targetPosition + Vector3.up * bodyCenterY; // 목표 위치 기준 캡슐 중심점입니다. — 요약: 발밑이 아닌 몸통 높이에서 충돌을 봅니다.
+        Vector3 point1 = center + Vector3.up * halfLine; // 캡슐 위쪽 구 중심점입니다. — 요약: CheckCapsule의 첫 번째 점입니다.
+        Vector3 point2 = center - Vector3.up * halfLine; // 캡슐 아래쪽 구 중심점입니다. — 요약: CheckCapsule의 두 번째 점입니다.
+
+        bool blocked = Physics.CheckCapsule(point1, point2, radius + Mathf.Max(0f, wallSkin), mapBlockLayerMask, QueryTriggerInteraction.Ignore); // 벽 레이어와 겹치는지 검사합니다. — 요약: true면 벽/장애물에 걸린 상태입니다.
+        return blocked; // 검사 결과를 호출한 쪽으로 전달합니다. — 요약: 이동 허용 여부 판단의 최종 값입니다.
     }
 
     private void ResetSeparationWhenIdle() // 추격하지 않을 때 분리 스무딩 상태를 정리하는 함수입니다. — 요약: 분리 관련 SmoothDamp만 0 쪽으로 당겨 다음 시작이 부드럽습니다.
