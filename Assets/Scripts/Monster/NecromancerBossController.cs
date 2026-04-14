@@ -27,6 +27,8 @@ public class NecromancerBossController : MonoBehaviour
     [SerializeField] private int skeletonSpawnCount = 2;
     [SerializeField] private float summonSpread = 1.6f;
     [SerializeField] private float castWindupSeconds = 0.6f;
+    [Tooltip("비어 있으면 구체 프리미티브를 생성합니다. FireBall_Projectile 등 비주얼 프리팹을 넣으면 그대로 날아갑니다.")]
+    [SerializeField] private GameObject projectilePrefab;
     [SerializeField] private float projectileSpeed = 10f;
     [SerializeField] private int projectileDamage = 20;
     [SerializeField] private float projectileLifetime = 5f;
@@ -225,23 +227,54 @@ public class NecromancerBossController : MonoBehaviour
 
     private void SpawnProjectile(Vector3 position, Vector3 direction)
     {
-        GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        sphere.name = "NecromancerProjectile";
-        sphere.transform.position = position;
-        sphere.transform.localScale = Vector3.one * 0.35f;
+        Vector3 moveDir = direction.sqrMagnitude > 0.0001f ? direction.normalized : transform.forward;
+        Quaternion rotation = Quaternion.LookRotation(moveDir, Vector3.up);
 
-        Collider col = sphere.GetComponent<Collider>();
-        if (col != null) col.isTrigger = true;
+        GameObject projectileRoot;
+        if (projectilePrefab != null)
+        {
+            projectileRoot = Instantiate(projectilePrefab, position, rotation);
+            projectileRoot.name = "NecromancerProjectile";
 
-        Rigidbody rb = sphere.AddComponent<Rigidbody>();
-        rb.useGravity = false;
-        rb.linearDamping = 0f;
-        rb.angularDamping = 0f;
-        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-        rb.isKinematic = true;
+            Projectile stockProjectile = projectileRoot.GetComponent<Projectile>();
+            if (stockProjectile != null) stockProjectile.SuppressDefaultProjectileBehavior();
 
-        NecromancerProjectile projectile = sphere.AddComponent<NecromancerProjectile>();
-        projectile.Initialize(gameObject, direction, projectileSpeed, projectileDamage, projectileLifetime);
+            Rigidbody rb = projectileRoot.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.useGravity = false;
+                rb.isKinematic = true;
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+                rb.linearDamping = 0f;
+                rb.angularDamping = 0f;
+                rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            }
+
+            Collider col = projectileRoot.GetComponent<Collider>();
+            if (col != null) col.isTrigger = true;
+        }
+        else
+        {
+            projectileRoot = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            projectileRoot.name = "NecromancerProjectile";
+            projectileRoot.transform.SetPositionAndRotation(position, rotation);
+            projectileRoot.transform.localScale = Vector3.one * 0.35f;
+
+            Collider col = projectileRoot.GetComponent<Collider>();
+            if (col != null) col.isTrigger = true;
+
+            Rigidbody rb = projectileRoot.AddComponent<Rigidbody>();
+            rb.useGravity = false;
+            rb.linearDamping = 0f;
+            rb.angularDamping = 0f;
+            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            rb.isKinematic = true;
+        }
+
+        NecromancerProjectile projectile = projectileRoot.GetComponent<NecromancerProjectile>();
+        if (projectile == null) projectile = projectileRoot.AddComponent<NecromancerProjectile>();
+        projectile.Initialize(gameObject, moveDir, projectileSpeed, projectileDamage, projectileLifetime);
     }
 
     private void TryPlayState(int hash, bool force = false)

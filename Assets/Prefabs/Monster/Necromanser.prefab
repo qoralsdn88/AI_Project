@@ -20530,6 +20530,7 @@ MonoBehaviour:
   skeletonSpawnCount: 2
   summonSpread: 1.6
   castWindupSeconds: 0.6
+  projectilePrefab: {fileID: 1707102027251842, guid: 50b209899296c7b44818cdacaff74416, type: 3}
   projectileSpeed: 10
   projectileDamage: 20
   projectileLifetime: 5
