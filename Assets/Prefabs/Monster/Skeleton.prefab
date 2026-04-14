@@ -183,7 +183,7 @@ MonoBehaviour:
   player: {fileID: 0}
   animator: {fileID: 6638836517130794473}
   moveSpeed: 1.8
-  detectRange: 11
+  detectRange: 12
   attackRange: 1.8
   monsterSpacingRadius: 1.6
   monsterSpacingStrength: 4.15
@@ -247,17 +247,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 30
+  autoApplyNecromancerDefaults: 1
+  necromancerMaxHealth: 10
+  necromancerHitStateName: getgit
+  necromancerDeathStateName: Dead
   animator: {fileID: 0}
   getHitTriggerParameter: GetHit
+  getHitStateName: GetHit
   attackBehaviour: {fileID: 0}
   hitStopDelayAfterHitReactSeconds: 0.1
   hitStopDuration: 0.05
   hitStopTimeScale: 0
-  deathTriggerParameter: Dead
+  deathBoolParameter: Dead
   deathStateName: Dead
   removeAfterDeathAnimationSeconds: 3
   deathAnimFinishedNormalizedTime: 0.98
   deathAnimSafetyTimeout: 12
+  lockToDeathStateUntilDestroyed: 1
+  deathReapplyIntervalSeconds: 0.2
 --- !u!195 &4344419389277575300
 NavMeshAgent:
   m_ObjectHideFlags: 0

@@ -20526,7 +20526,7 @@ MonoBehaviour:
   rotateSpeed: 10
   summonCooldown: 20
   projectileCooldown: 10
-  summonMonsterPrefab: {fileID: 0}
+  summonMonsterPrefab: {fileID: 110935068829381929, guid: 982d237c0ac230044903cdcf8022887a, type: 3}
   skeletonSpawnCount: 2
   summonSpread: 1.6
   castWindupSeconds: 0.6
