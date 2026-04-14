@@ -97,6 +97,8 @@ MonoBehaviour:
   attackSource: {fileID: 1048768281967659205}
   monsterRoot: {fileID: 751023214943309958}
   hitSizeMultiplier: 3.5
+  autoResizeFromRenderers: 1
+  hitBoundsProbeRoot: {fileID: 0}
   fallbackBoxSize: {x: 0.6, y: 0.15, z: 2.2}
   hitLayers:
     serializedVersion: 2
@@ -202,6 +204,8 @@ MonoBehaviour:
   attackSource: {fileID: 1048768281967659205}
   monsterRoot: {fileID: 751023214943309958}
   hitSizeMultiplier: 3.5
+  autoResizeFromRenderers: 1
+  hitBoundsProbeRoot: {fileID: 0}
   fallbackBoxSize: {x: 0.6, y: 0.15, z: 2.2}
   hitLayers:
     serializedVersion: 2
@@ -7492,7 +7496,7 @@ MonoBehaviour:
   player: {fileID: 0}
   animator: {fileID: 8515176627030191889}
   moveSpeed: 2.5
-  detectRange: 11
+  detectRange: 12
   attackRange: 1.8
   monsterSpacingRadius: 1.1
   monsterSpacingStrength: 1.8
@@ -7530,17 +7534,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 30
+  autoApplyNecromancerDefaults: 1
+  necromancerMaxHealth: 10
+  necromancerHitStateName: getgit
+  necromancerDeathStateName: Dead
   animator: {fileID: 8515176627030191889}
   getHitTriggerParameter: GetHit
+  getHitStateName: GetHit
   attackBehaviour: {fileID: 1048768281967659205}
   hitStopDelayAfterHitReactSeconds: 0.1
   hitStopDuration: 0.1
   hitStopTimeScale: 0
-  deathTriggerParameter: Dead
+  deathBoolParameter: Dead
   deathStateName: Dead
   removeAfterDeathAnimationSeconds: 3
   deathAnimFinishedNormalizedTime: 0.98
   deathAnimSafetyTimeout: 12
+  lockToDeathStateUntilDestroyed: 1
+  deathReapplyIntervalSeconds: 0.2
 --- !u!114 &-2763527745239797414
 MonoBehaviour:
   m_ObjectHideFlags: 0
