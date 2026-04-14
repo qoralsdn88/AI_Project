@@ -3,7 +3,7 @@ using UnityEngine.SceneManagement;
 
 public class MainMenuUIController : MonoBehaviour
 {
-    public void OnClickStartGame() => SceneManager.LoadScene(GameScenes.MapTest);
+    public void OnClickStartGame() => SceneManager.LoadScene(GameScenes.UITest);
 
     public void OnClickQuitGame()
     {

@@ -128,6 +128,15 @@ public class SimplePlayerHealth : MonoBehaviour
         }
     }
 
+    public void HealToFull()
+    {
+        if (_isDead) return;
+
+        int previousHp = currentHp;
+        currentHp = Mathf.Max(1, maxHp);
+        Debug.Log($"{LogTag} 포션 회복 | 이전 체력 {previousHp} → 현재 {currentHp} / 최대 {maxHp}");
+    }
+
     private void ApplyHitReaction()
     {
         InterruptMelee();

@@ -12,6 +12,7 @@ public class PlayerPotionUseController : MonoBehaviour
     [Header("참조")]
     [SerializeField] private Animator targetAnimator;
     [SerializeField] private PlayerPotionInventory inventory;
+    [SerializeField] private SimplePlayerHealth playerHealth;
 
     [Header("애니메이션")]
     [SerializeField] private string drinkTriggerParameter = "DrinkPotion";
@@ -42,6 +43,7 @@ public class PlayerPotionUseController : MonoBehaviour
         if (targetAnimator == null) targetAnimator = GetComponentInChildren<Animator>();
         if (inventory == null) inventory = PlayerPotionInventory.Resolve(transform);
         if (inventory == null) inventory = gameObject.AddComponent<PlayerPotionInventory>();
+        if (playerHealth == null) playerHealth = SimplePlayerHealth.Resolve(transform);
         if (targetAnimator != null)
         {
             _leftHand = targetAnimator.GetBoneTransform(HumanBodyBones.LeftHand);
@@ -67,9 +69,21 @@ public class PlayerPotionUseController : MonoBehaviour
         AttachPotionToHand(item.holdPrefab);
         PlayDrinkAnimation();
         yield return WaitUntilDrinkAnimationFinished();
+        ApplyPotionHeal();
         CleanupHoldItem();
         RestoreEquipmentsAfterDrink();
         _isDrinking = false;
+    }
+
+    private void ApplyPotionHeal()
+    {
+        if (playerHealth == null)
+        {
+            playerHealth = SimplePlayerHealth.Resolve(transform);
+        }
+
+        if (playerHealth == null) return;
+        playerHealth.HealToFull();
     }
 
     private void AttachPotionToHand(GameObject holdPrefab)

@@ -4,7 +4,7 @@
 public static class GameScenes
 {
     public const string MainMenu = "MainMenu";
-    public const string MapTest = "MapTest";
+    public const string UITest = "UITest";
     public const string StageSelect = "StageSelect";
     public const string Game = "GameScene";
 }
