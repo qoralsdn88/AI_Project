@@ -3755,6 +3755,8 @@ GameObject:
   - component: {fileID: 6726155952074937441}
   - component: {fileID: 5148629034817293840}
   - component: {fileID: 2934704770997051122}
+  - component: {fileID: 7758486733880209701}
+  - component: {fileID: 7494774773502264542}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -3968,6 +3970,7 @@ MonoBehaviour:
   hitStateName: Sword_Impact
   deathStateName: Dead
   hitStunDuration: 0.5
+  hitInvulnerabilitySeconds: 1
   respawnDelaySeconds: 5
   hitCrossFadeDuration: 0.1
   hitStopDelayAfterHitReactSeconds: 0.1
@@ -4002,6 +4005,41 @@ MonoBehaviour:
   blockImpactCrossFadeDuration: 0.05
   verboseDebugLog: 1
   debugLogInterval: 0.25
+--- !u!114 &7758486733880209701
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2428664955194134132}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5f4f1e655e662146a088ec534e999e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hasPotion: 0
+  itemName: 
+  itemIcon: {fileID: 0}
+  itemHoldPrefab: {fileID: 0}
+--- !u!114 &7494774773502264542
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2428664955194134132}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d5a48a11788bae4eb1ee5e724c244de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetAnimator: {fileID: 0}
+  inventory: {fileID: 7758486733880209701}
+  drinkTriggerParameter: DrinkPotion
+  drinkDuration: 1.8
+  rightHandLocalPosition: {x: 0.03, y: 0.03, z: 0.02}
+  rightHandLocalEuler: {x: -25, y: -75, z: 90}
+  rightHandLocalScale: {x: 1, y: 1, z: 1}
 --- !u!1 &2650458346019732482
 GameObject:
   m_ObjectHideFlags: 0

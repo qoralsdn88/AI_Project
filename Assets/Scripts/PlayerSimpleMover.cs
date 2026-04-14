@@ -53,6 +53,7 @@ public class PlayerSimpleMover : MonoBehaviour
 
         Vector3 moveDirection = (rightDir * moveInput.x + forwardDir * moveInput.y).normalized;
         Vector3 horizontalMotion = moveDirection * moveSpeed * Time.deltaTime;
+        if (BlacksmithGameplayLock.IsMenuOpen) horizontalMotion = Vector3.zero;
         if (meleeCombat != null && meleeCombat.IsAttacking) horizontalMotion = Vector3.zero;
         if (playerHealth != null && playerHealth.IsActionLocked) horizontalMotion = Vector3.zero;
 

@@ -58,6 +58,8 @@ public class PlayerMouseLook : MonoBehaviour
     // 핵심 요약: 마우스 움직임을 읽어 캐릭터와 카메라를 회전시킵니다.
     private void Update()
     {
+        if (BlacksmithGameplayLock.IsMenuOpen) { return; }
+
         if (playerHealth != null && playerHealth.IsActionLocked) { return; }
 
         // 마우스 입력을 읽어서 좌우와 위아래 이동량을 가져옵니다.

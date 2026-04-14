@@ -2,6 +2,7 @@
 using UnityEngine;
 // Input System 에셋을 쓰기 위해 꼭 필요합니다.
 using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
 // 코루틴을 쓰기 위해 꼭 필요합니다.
 using System.Collections;
 // 해시셋을 쓰기 위해 꼭 필요합니다.
@@ -65,6 +66,14 @@ public class PlayerMeleeCombat : MonoBehaviour
     // 한 번에 줄 데미지 크기입니다.
     // 핵심 요약: TryHit에서 그대로 전달합니다.
     [SerializeField] private int attackDamage = 12;
+
+    public int CurrentAttackDamage => attackDamage;
+    public InputActionAsset InputActionAsset => inputActionAsset;
+
+    public void AddAttackDamage(int delta)
+    {
+        attackDamage = Mathf.Max(0, attackDamage + delta);
+    }
 
     [Header("타격 타이밍 (타이머 폴백)")]
     [Tooltip("useAnimationEventsForDamageWindow가 꺼져 있을 때만 사용합니다.")]
@@ -254,6 +263,11 @@ public class PlayerMeleeCombat : MonoBehaviour
     private void OnAttackStarted(InputAction.CallbackContext ctx)
     {
         if (ctx.phase != InputActionPhase.Started) { return; }
+
+        // UI 위 클릭은 공격 입력으로 통과시키지 않습니다.
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) { return; }
+
+        if (BlacksmithGameplayLock.IsMenuOpen) { return; }
 
         if (_playerHealth == null) { _playerHealth = SimplePlayerHealth.Resolve(transform); }
         if (_playerHealth != null && _playerHealth.IsActionLocked) { return; }
@@ -488,6 +502,6 @@ public class PlayerMeleeCombat : MonoBehaviour
         // 목록에 넣습니다.
         _hitInstanceIds.Add(id);
         // 데미지를 줍니다.
-        target.TakeDamage(attackDamage, gameObject, hitPoint);
+        target.TakeDamage(CurrentAttackDamage, gameObject, hitPoint);
     }
 }

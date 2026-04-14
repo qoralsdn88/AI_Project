@@ -4,7 +4,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 /// <summary>
-/// 인게임 HUD: 플레이어 체력, 하단 조작 안내, 문 상호작용 프롬프트.
+/// 인게임 HUD: 플레이어 체력, 하단 조작 안내, 문/대장장이 상호작용 프롬프트.
 /// 빈 오브젝트에 붙이고 <see cref="buildUiAtRuntime"/>를 켜면 Canvas를 런타임에 생성합니다.
 /// </summary>
 [DisallowMultipleComponent]
@@ -112,7 +112,9 @@ public class SoulsLikeGameHud : MonoBehaviour
         }
 
         Vector3 playerPos = _playerTransform.position;
-        DoorOpenSignal best = null;
+        DoorOpenSignal bestDoor = null;
+        BlackSmithInteractStation bestBlacksmith = null;
+        TreasureChestInteractStation bestChest = null;
         float bestSq = float.MaxValue;
 
         foreach (DoorOpenSignal door in DoorOpenSignal.AllDoors)
@@ -124,17 +126,60 @@ public class SoulsLikeGameHud : MonoBehaviour
             if (sq < bestSq)
             {
                 bestSq = sq;
-                best = door;
+                bestDoor = door;
+                bestBlacksmith = null;
+                bestChest = null;
             }
         }
 
-        if (best == null)
+        foreach (BlackSmithInteractStation station in BlackSmithInteractStation.AllStations)
+        {
+            if (station == null) continue;
+            if (!station.ShouldShowInteractPrompt()) continue;
+
+            float sq = (station.transform.position - playerPos).sqrMagnitude;
+            if (sq < bestSq)
+            {
+                bestSq = sq;
+                bestDoor = null;
+                bestBlacksmith = station;
+                bestChest = null;
+            }
+        }
+
+        foreach (TreasureChestInteractStation station in TreasureChestInteractStation.AllStations)
+        {
+            if (station == null) continue;
+            if (!station.ShouldShowInteractPrompt()) continue;
+
+            float sq = (station.transform.position - playerPos).sqrMagnitude;
+            if (sq < bestSq)
+            {
+                bestSq = sq;
+                bestDoor = null;
+                bestBlacksmith = null;
+                bestChest = station;
+            }
+        }
+
+        if (bestDoor == null && bestBlacksmith == null && bestChest == null)
         {
             SetDoorPromptVisible(false);
             return;
         }
 
-        doorPromptLabel.text = best.GetInteractPromptText();
+        if (bestDoor != null)
+        {
+            doorPromptLabel.text = bestDoor.GetInteractPromptText();
+        }
+        else if (bestBlacksmith != null)
+        {
+            doorPromptLabel.text = bestBlacksmith.GetInteractPromptText();
+        }
+        else
+        {
+            doorPromptLabel.text = bestChest.GetInteractPromptText();
+        }
         SetDoorPromptVisible(true);
     }
 

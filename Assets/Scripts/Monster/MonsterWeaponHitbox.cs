@@ -176,7 +176,11 @@ public class MonsterWeaponHitbox : MonoBehaviour
         if (PlayerShieldBlock.TryBlockHit(hp.transform, attacker))
         {
             int baseDamage = attackSource != null ? attackSource.AttackDamage : 0;
-            int guardedDamage = Mathf.Max(0, Mathf.RoundToInt(baseDamage * blockDamageMultiplier));
+            float guardMult = blockDamageMultiplier;
+            PlayerUpgradeState up = PlayerUpgradeState.Resolve(hp.transform);
+            if (up != null) { guardMult = up.GuardDamageTakenMultiplier; }
+
+            int guardedDamage = Mathf.Max(0, Mathf.RoundToInt(baseDamage * guardMult));
             if (verboseHitDebugLog)
             {
                 Debug.Log(

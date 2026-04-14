@@ -92,6 +92,8 @@ public class PlayerShieldBlock : MonoBehaviour
 
     private bool EvaluateBlock(GameObject attacker)
     {
+        if (BlacksmithGameplayLock.IsMenuOpen) { return false; }
+
         if (playerHealth == null) { playerHealth = SimplePlayerHealth.Resolve(transform); }
         if (playerHealth != null && playerHealth.IsDead)
         {
