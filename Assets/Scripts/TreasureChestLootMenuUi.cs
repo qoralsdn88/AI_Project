@@ -27,6 +27,7 @@ public class TreasureChestLootMenuUi : MonoBehaviour
 
     private TreasureChestInteractStation _openedChest;
     private bool _isOpen;
+    public bool IsOpen => _isOpen;
 
     private void Awake()
     {
@@ -48,6 +49,7 @@ public class TreasureChestLootMenuUi : MonoBehaviour
     public void OpenForChest(TreasureChestInteractStation chest)
     {
         _openedChest = chest;
+        _openedChest?.MarkAsOpened();
         EnsureEventSystemExists();
         if (targetCanvas != null) targetCanvas.enabled = true;
         if (rootPanel != null) rootPanel.SetActive(true);

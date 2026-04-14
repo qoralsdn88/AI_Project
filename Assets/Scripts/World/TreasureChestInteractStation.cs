@@ -21,10 +21,11 @@ public class TreasureChestInteractStation : MonoBehaviour
     [SerializeField] private string promptMessage = "F:상자 열기";
 
     private SphereCollider _sphere;
-    private int _playersInside;
+    private readonly HashSet<Transform> _playersInside = new HashSet<Transform>();
     private InputAction _interactAction;
     private bool _interactWired;
     private int _wireAttempts;
+    private bool _hasBeenOpened;
 
     private void OnEnable()
     {
@@ -63,11 +64,13 @@ public class TreasureChestInteractStation : MonoBehaviour
 
     public bool ShouldShowInteractPrompt()
     {
+        if (_hasBeenOpened) return false;
         if (BlacksmithGameplayLock.IsMenuOpen) return false;
-        return _playersInside > 0;
+        return _playersInside.Count > 0;
     }
 
     public string GetInteractPromptText() => promptMessage;
+    public void MarkAsOpened() => _hasBeenOpened = true;
 
     private void EnsureColliderExists()
     {
@@ -117,37 +120,50 @@ public class TreasureChestInteractStation : MonoBehaviour
         if (ctx.phase != InputActionPhase.Started) return;
 
         TreasureChestLootMenuUi ui = TreasureChestLootMenuUi.EnsureInstance();
-        bool inRange = _playersInside > 0;
+        bool inRange = _playersInside.Count > 0;
 
-        if (BlacksmithGameplayLock.IsMenuOpen)
+        if (ui.IsOpen)
         {
             ui.CloseFullUi();
             return;
         }
 
+        if (_hasBeenOpened) return;
+        if (BlacksmithGameplayLock.IsMenuOpen) return;
         if (!inRange) return;
         ui.OpenForChest(this);
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!IsPlayerCollider(other)) return;
-        _playersInside++;
+        if (!TryGetPlayerRoot(other, out Transform playerRoot)) return;
+        _playersInside.Add(playerRoot);
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (!IsPlayerCollider(other)) return;
-        _playersInside = Mathf.Max(0, _playersInside - 1);
-        if (_playersInside == 0 && BlacksmithGameplayLock.IsMenuOpen)
+        if (!TryGetPlayerRoot(other, out Transform playerRoot)) return;
+        _playersInside.Remove(playerRoot);
+        if (_playersInside.Count == 0)
         {
-            TreasureChestLootMenuUi.EnsureInstance().CloseFullUi();
+            TreasureChestLootMenuUi ui = TreasureChestLootMenuUi.EnsureInstance();
+            if (ui.IsOpen) ui.CloseFullUi();
         }
     }
 
-    private static bool IsPlayerCollider(Collider other)
+    private static bool TryGetPlayerRoot(Collider other, out Transform playerRoot)
     {
+        playerRoot = null;
         if (other == null) return false;
-        return other.CompareTag("Player") || other.GetComponentInParent<SimplePlayerHealth>() != null;
+        if (other.CompareTag("Player"))
+        {
+            playerRoot = other.transform;
+            return true;
+        }
+
+        SimplePlayerHealth health = other.GetComponentInParent<SimplePlayerHealth>();
+        if (health == null) return false;
+        playerRoot = health.transform;
+        return true;
     }
 }

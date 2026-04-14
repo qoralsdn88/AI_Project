@@ -27,18 +27,26 @@ public class PlayerPotionUseController : MonoBehaviour
     [Header("병목 기준 보정")]
     [Tooltip("포션 프리팹 원점에서 병목까지의 로컬 오프셋. 이 값을 기준으로 손가락 사이에 병목이 오도록 보정합니다.")]
     [SerializeField] private Vector3 bottleNeckLocalOffset = new Vector3(0f, 0.075f, 0f);
+    [Tooltip("병목 위치를 손가락 기준점에 미세하게 튜닝하기 위한 월드 오프셋.")]
+    [SerializeField] private Vector3 fingerAnchorWorldOffset = Vector3.zero;
 
     private Transform _leftHand;
+    private Transform _leftIndexDistal;
     private bool _isDrinking;
     private GameObject _holdInstance;
     private readonly System.Collections.Generic.List<GameObject> _temporarilyHiddenEquipments = new System.Collections.Generic.List<GameObject>();
+    public bool IsDrinking => _isDrinking;
 
     private void Awake()
     {
         if (targetAnimator == null) targetAnimator = GetComponentInChildren<Animator>();
         if (inventory == null) inventory = PlayerPotionInventory.Resolve(transform);
         if (inventory == null) inventory = gameObject.AddComponent<PlayerPotionInventory>();
-        if (targetAnimator != null) _leftHand = targetAnimator.GetBoneTransform(HumanBodyBones.LeftHand);
+        if (targetAnimator != null)
+        {
+            _leftHand = targetAnimator.GetBoneTransform(HumanBodyBones.LeftHand);
+            _leftIndexDistal = targetAnimator.GetBoneTransform(HumanBodyBones.LeftIndexDistal);
+        }
     }
 
     private void Update()
@@ -75,6 +83,23 @@ public class PlayerPotionUseController : MonoBehaviour
         // 병목이 손 기준점이 되도록 원점 차이를 역보정합니다.
         Vector3 neckCompensation = _holdInstance.transform.localRotation * Vector3.Scale(bottleNeckLocalOffset, _holdInstance.transform.localScale);
         _holdInstance.transform.localPosition -= neckCompensation;
+        AlignPotionToFingerAtDrinkStart();
+    }
+
+    private void AlignPotionToFingerAtDrinkStart()
+    {
+        if (_holdInstance == null) return;
+
+        Transform hold = _holdInstance.transform;
+        Vector3 euler = hold.eulerAngles;
+        hold.rotation = Quaternion.Euler(0f, euler.y, 0f);
+
+        Transform fingerAnchor = _leftIndexDistal != null ? _leftIndexDistal : _leftHand;
+        if (fingerAnchor == null) return;
+
+        Vector3 neckWorldPosition = hold.TransformPoint(bottleNeckLocalOffset);
+        Vector3 targetWorldPosition = fingerAnchor.position + fingerAnchorWorldOffset;
+        hold.position += (targetWorldPosition - neckWorldPosition);
     }
 
     private void PlayDrinkAnimation()

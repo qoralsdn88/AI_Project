@@ -22,6 +22,7 @@ public class PlayerSimpleMover : MonoBehaviour
 
     [SerializeField] private PlayerMeleeCombat meleeCombat;
     [SerializeField] private SimplePlayerHealth playerHealth;
+    [SerializeField] private PlayerPotionUseController potionUseController;
 
     private float lastInputTime;
 
@@ -32,6 +33,7 @@ public class PlayerSimpleMover : MonoBehaviour
             Debug.LogError("[PlayerSimpleMover] CharacterController가 없습니다. Add Component로 추가해주세요.");
         if (meleeCombat == null) meleeCombat = PlayerMeleeCombat.Resolve(transform);
         if (playerHealth == null) playerHealth = SimplePlayerHealth.Resolve(transform);
+        if (potionUseController == null) potionUseController = GetComponent<PlayerPotionUseController>();
     }
 
     private void OnEnable() => statusMessage = "컴포넌트 활성화됨";
@@ -56,6 +58,7 @@ public class PlayerSimpleMover : MonoBehaviour
         if (BlacksmithGameplayLock.IsMenuOpen) horizontalMotion = Vector3.zero;
         if (meleeCombat != null && meleeCombat.IsAttacking) horizontalMotion = Vector3.zero;
         if (playerHealth != null && playerHealth.IsActionLocked) horizontalMotion = Vector3.zero;
+        if (potionUseController != null && potionUseController.IsDrinking) horizontalMotion = Vector3.zero;
 
         bool isGrounded = characterController.isGrounded;
         if (isGrounded && verticalVelocity < 0f) verticalVelocity = groundedStickY;

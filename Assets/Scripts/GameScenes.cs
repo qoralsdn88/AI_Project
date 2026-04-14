@@ -3,7 +3,8 @@
 /// </summary>
 public static class GameScenes
 {
-    public const string MainMenu = "MainScene";
-    public const string StageSelect = "StageSelectScene";
+    public const string MainMenu = "MainMenu";
+    public const string MapTest = "MapTest";
+    public const string StageSelect = "StageSelect";
     public const string Game = "GameScene";
 }

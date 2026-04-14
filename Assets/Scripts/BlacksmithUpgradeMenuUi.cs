@@ -32,6 +32,8 @@ public class BlacksmithUpgradeMenuUi : MonoBehaviour
     }
 
     private ForgeKind _pendingKind;
+    public bool IsOpen => _isOpen;
+    private bool _isOpen;
 
     private void Awake()
     {
@@ -46,6 +48,7 @@ public class BlacksmithUpgradeMenuUi : MonoBehaviour
         CachePlayerRefs();
         if (targetCanvas != null) targetCanvas.enabled = true;
         BlacksmithGameplayLock.SetMenuOpen(true);
+        _isOpen = true;
         ApplyGameplayFocus(true);
         ShowOnly(rootPanel);
         if (titleLabel != null) titleLabel.text = "대장장이 — 강화";
@@ -54,20 +57,22 @@ public class BlacksmithUpgradeMenuUi : MonoBehaviour
 
     public void CloseFullUi()
     {
-        if (!BlacksmithGameplayLock.IsMenuOpen) return;
+        if (!_isOpen && !BlacksmithGameplayLock.IsMenuOpen) return;
         HideAllPanelsImmediate();
         if (targetCanvas != null) targetCanvas.enabled = false;
         BlacksmithGameplayLock.SetMenuOpen(false);
+        _isOpen = false;
         _pendingKind = ForgeKind.None;
         ApplyGameplayFocus(false);
     }
 
     private void OnDisable()
     {
-        if (!BlacksmithGameplayLock.IsMenuOpen) return;
+        if (!_isOpen && !BlacksmithGameplayLock.IsMenuOpen) return;
         HideAllPanelsImmediate();
         if (targetCanvas != null) targetCanvas.enabled = false;
         BlacksmithGameplayLock.SetMenuOpen(false);
+        _isOpen = false;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }

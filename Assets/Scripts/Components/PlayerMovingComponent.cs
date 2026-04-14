@@ -29,6 +29,7 @@ public class PlayerMovingComponent : MonoBehaviour
 	private Animator animator;
 	private WeaponComponent weapon;
 	private StateComponent state;
+	private PlayerPotionUseController potionUseController;
 
 	private Vector2 inputMove;
 	public Vector2 MoveValue { get => inputMove; }
@@ -50,6 +51,7 @@ public class PlayerMovingComponent : MonoBehaviour
     {
 		animator = GetComponent<Animator>();
 		weapon = GetComponent<WeaponComponent>();
+		potionUseController = GetComponent<PlayerPotionUseController>();
 		
 		state = GetComponent<StateComponent>();
 		state.OnStateTypeChanged += OnStateTypeChanged;
@@ -133,6 +135,13 @@ public class PlayerMovingComponent : MonoBehaviour
 
 		if (bCanMove == false)
 			return;
+
+		if (potionUseController != null && potionUseController.IsDrinking)
+		{
+			animator.SetFloat("SpeedX", 0.0f);
+			animator.SetFloat("SpeedY", 0.0f);
+			return;
+		}
 
 		
 		Vector3 direction = Vector3.zero;
